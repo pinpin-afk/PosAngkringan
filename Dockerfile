@@ -2,13 +2,10 @@ FROM composer:2.7 as build
 
 WORKDIR /app
 
-COPY composer.json composer.lock ./
-# Tambahkan baris ini:
-COPY .env.example .env
+COPY . .                                   
+RUN cp .env.example .env                   # Pastikan .env ada (atau customize sesuai kebutuhan)
 
 RUN composer install --no-dev --prefer-dist --optimize-autoloader
-
-COPY . .
 
 RUN apt-get update && apt-get install -y nodejs npm
 RUN npm install
