@@ -1,0 +1,13 @@
+{
+  "name": "POS Angkringan",
+  "short_name": "POS",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "48x48 72x72 96x96 128x128 256x256", "type": "image/x-icon" }
+  ]
+}
+

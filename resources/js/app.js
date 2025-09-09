@@ -40,3 +40,10 @@ if (document.getElementById('admin-login-app')) {
         createApp(PosApp).mount('#app');
     }
 }
+
+// Register PWA service worker (non-blocking)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
