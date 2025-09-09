@@ -13,7 +13,9 @@ RUN npm run build
 
 FROM php:8.2-apache
 
-# Install PostgreSQL PHP extension!
+# Tambahkan install libpq-dev sebelum install ekstensi pgsql!
+RUN apt-get update && apt-get install -y libpq-dev
+
 RUN docker-php-ext-install pdo pdo_pgsql
 
 WORKDIR /var/www/html
