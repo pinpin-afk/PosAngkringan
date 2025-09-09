@@ -28,21 +28,21 @@ use App\Http\Controllers\IsolatedGuardAuthController;
 // ============================================================================
 // PUBLIC ROUTES
 // ============================================================================
-Route::get('/run-migrate', function () {
-    // Pastikan table sessions migration sudah dibuat
-    if (!file_exists(database_path('migrations/' . date('Y_m_d') . '_000000_create_sessions_table.php'))) {
-        \Artisan::call('session:table');
-    }
-    // Jalankan migrate dan tampilkan outputnya!
-    \Artisan::call('migrate', ['--force' => true]);
-    return '<pre>' . \Artisan::output() . '</pre>';
-});
+// Route::get('/run-migrate', function () {
+//     // Pastikan table sessions migration sudah dibuat
+//     if (!file_exists(database_path('migrations/' . date('Y_m_d') . '_000000_create_sessions_table.php'))) {
+//         \Artisan::call('session:table');
+//     }
+//     // Jalankan migrate dan tampilkan outputnya!
+//     \Artisan::call('migrate', ['--force' => true]);
+//     return '<pre>' . \Artisan::output() . '</pre>';
+// });
 
-Route::get('/run-seed', function () {
-    // Jalankan db:seed dan tampilkan outputnya!
-    \Artisan::call('db:seed', ['--force' => true]);
-    return '<pre>' . \Artisan::output() . '</pre>';
-});
+// Route::get('/run-seed', function () {
+//     // Jalankan db:seed dan tampilkan outputnya!
+//     \Artisan::call('db:seed', ['--force' => true]);
+//     return '<pre>' . \Artisan::output() . '</pre>';
+// });
 
 // Redirect root to kasir login
 Route::get('/', function () {
