@@ -26,10 +26,14 @@ use App\Http\Controllers\IsolatedGuardAuthController;
 // ============================================================================
 // PUBLIC ROUTES
 // ============================================================================
-
 Route::get('/run-migrate', function () {
-    \Artisan::call('migrate', ["--force" => true]);
-    return 'Migrasi sukses!';
+    // Pastikan table sessions migration sudah dibuat
+    if (!file_exists(database_path('migrations/' . date('Y_m_d') . '_000000_create_sessions_table.php'))) {
+        \Artisan::call('session:table');
+    }
+    // Jalankan migrate dan tampilkan outputnya!
+    \Artisan::call('migrate', ['--force' => true]);
+    return '<pre>' . \Artisan::output() . '</pre>';
 });
 
 // Redirect root to kasir login
