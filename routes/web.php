@@ -27,6 +27,11 @@ use App\Http\Controllers\IsolatedGuardAuthController;
 // PUBLIC ROUTES
 // ============================================================================
 
+Route::get('/run-migrate', function () {
+    \Artisan::call('migrate', ["--force" => true]);
+    return 'Migrasi sukses!';
+});
+
 // Redirect root to kasir login
 Route::get('/', function () {
     return redirect()->route('kasir.login');
