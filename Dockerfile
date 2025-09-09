@@ -13,8 +13,8 @@ RUN npm run build
 
 FROM php:8.2-apache
 
-# Tambahkan baris ini untuk install ekstensi MySQL!
-RUN docker-php-ext-install pdo pdo_mysql
+# Install PostgreSQL PHP extension!
+RUN docker-php-ext-install pdo pdo_pgsql
 
 WORKDIR /var/www/html
 
