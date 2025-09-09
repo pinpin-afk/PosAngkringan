@@ -2,12 +2,13 @@ FROM composer:2.7 as build
 
 WORKDIR /app
 
-COPY . .                                   
-RUN cp .env.example .env                   # Pastikan .env ada (atau customize sesuai kebutuhan)
+COPY . .
+RUN cp .env.example .env
 
 RUN composer install --no-dev --prefer-dist --optimize-autoloader
 
-RUN apt-get update && apt-get install -y nodejs npm
+# Ganti apt-get dengan apk!
+RUN apk add --no-cache nodejs npm
 RUN npm install
 RUN npm run build
 
