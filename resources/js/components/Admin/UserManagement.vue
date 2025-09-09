@@ -199,6 +199,7 @@
               >
                 <option value="admin">Administrator</option>
                 <option value="kasir">Kasir</option>
+                <option value="owner">Owner</option>
               </select>
             </div>
             

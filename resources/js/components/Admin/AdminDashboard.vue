@@ -81,11 +81,53 @@
                     </div>
                   </div>
                   <div class="ml-3 sm:ml-4 min-w-0">
-                    <p class="text-xs sm:text-sm text-white/80">Pendapatan Hari Ini</p>
+                    <p class="text-xs sm:text-sm text-white/80">Total Pendapatan</p>
                     <p class="text-lg sm:text-2xl font-bold">Rp {{ formatNumber(stats.today_revenue) }}</p>
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Charts Section -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <!-- Revenue Chart -->
+            <div class="bg-white rounded-xl shadow-xl p-4 sm:p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Pendapatan 7 Hari Terakhir</h3>
+                <div class="flex items-center space-x-2">
+                  <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span class="text-sm text-gray-600">Pendapatan</span>
+                </div>
+              </div>
+              <div class="h-64">
+                <canvas ref="revenueChart" class="w-full h-full"></canvas>
+              </div>
+            </div>
+
+            <!-- Orders Chart -->
+            <div class="bg-white rounded-xl shadow-xl p-4 sm:p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Pesanan 7 Hari Terakhir</h3>
+                <div class="flex items-center space-x-2">
+                  <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span class="text-sm text-gray-600">Pesanan</span>
+                </div>
+              </div>
+              <div class="h-64">
+                <canvas ref="ordersChart" class="w-full h-full"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product Categories Chart -->
+          <div class="bg-white rounded-xl shadow-xl p-4 sm:p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">Distribusi Produk per Kategori</h3>
+              <div class="text-sm text-gray-600">{{ stats.total_products }} Total Produk</div>
+            </div>
+            <div class="h-80">
+              <canvas ref="categoryChart" class="w-full h-full"></canvas>
             </div>
           </div>
 
@@ -149,9 +191,13 @@
 </template>
 
 <script>
+import { Chart, registerables } from 'chart.js';
 import AdminSidebar from './Layout/AdminSidebar.vue';
 import AdminNavbar from './Layout/AdminNavbar.vue';
 import AdminFooter from './Layout/AdminFooter.vue';
+
+// Register Chart.js components
+Chart.register(...registerables);
 export default {
   name: 'AdminDashboard',
   components: {
@@ -170,19 +216,40 @@ export default {
         total_categories: 0,
         total_orders: 0,
         today_revenue: 0
-      }
+      },
+      chartData: {
+        revenue: [],
+        orders: [],
+        categories: []
+      },
+      revenueChart: null,
+      ordersChart: null,
+      categoryChart: null
     }
   },
   mounted() {
     this.updateCurrentPage();
     this.handleHashNavigation();
     this.loadStats();
+    this.loadChartData();
     
     // Listen for custom page change events
     window.addEventListener('admin-page-change', (event) => {
       this.currentPage = event.detail.page;
       this.currentPageTitle = event.detail.title;
     });
+  },
+  beforeUnmount() {
+    // Cleanup charts when component is destroyed
+    if (this.revenueChart) {
+      this.revenueChart.destroy();
+    }
+    if (this.ordersChart) {
+      this.ordersChart.destroy();
+    }
+    if (this.categoryChart) {
+      this.categoryChart.destroy();
+    }
   },
   methods: {
     toggleSidebar() {
@@ -230,15 +297,245 @@ export default {
         if (res.ok) {
           const data = await res.json();
           this.stats = {
-            total_products: data.total_products ?? 0,
-            total_categories: data.total_categories ?? 0,
-            total_orders: data.total_orders ?? 0,
-            today_revenue: data.today_revenue ?? 0
+            total_products: data.totalProducts ?? 0,
+            total_categories: data.totalCategories ?? 0,
+            total_orders: data.totalOrders ?? 0,
+            today_revenue: data.totalRevenue ?? 0
           };
         }
       } catch (e) {
         console.error('Failed to load dashboard stats', e);
       }
+    },
+
+    async loadChartData() {
+      try {
+        // Load revenue data for last 7 days
+        const revenueRes = await fetch('/admin/dashboard/revenue-chart');
+        if (revenueRes.ok) {
+          this.chartData.revenue = await revenueRes.json();
+        }
+
+        // Load orders data for last 7 days
+        const ordersRes = await fetch('/admin/dashboard/orders-chart');
+        if (ordersRes.ok) {
+          this.chartData.orders = await ordersRes.json();
+        }
+
+        // Load categories data
+        const categoriesRes = await fetch('/admin/dashboard/categories-chart');
+        if (categoriesRes.ok) {
+          this.chartData.categories = await categoriesRes.json();
+        }
+
+        // Initialize charts after data is loaded
+        this.$nextTick(() => {
+          this.initCharts();
+        });
+      } catch (error) {
+        console.error('Error loading chart data:', error);
+        // Initialize charts with sample data if API fails
+        this.initChartsWithSampleData();
+      }
+    },
+
+    initCharts() {
+      this.createRevenueChart();
+      this.createOrdersChart();
+      this.createCategoryChart();
+    },
+
+    initChartsWithSampleData() {
+      // Sample data for demonstration
+      this.chartData.revenue = [
+        { date: '2024-01-01', revenue: 150000 },
+        { date: '2024-01-02', revenue: 200000 },
+        { date: '2024-01-03', revenue: 180000 },
+        { date: '2024-01-04', revenue: 220000 },
+        { date: '2024-01-05', revenue: 250000 },
+        { date: '2024-01-06', revenue: 300000 },
+        { date: '2024-01-07', revenue: 280000 }
+      ];
+
+      this.chartData.orders = [
+        { date: '2024-01-01', orders: 12 },
+        { date: '2024-01-02', orders: 18 },
+        { date: '2024-01-03', orders: 15 },
+        { date: '2024-01-04', orders: 22 },
+        { date: '2024-01-05', orders: 25 },
+        { date: '2024-01-06', orders: 30 },
+        { date: '2024-01-07', orders: 28 }
+      ];
+
+      this.chartData.categories = [
+        { name: 'Makanan', count: 15 },
+        { name: 'Minuman', count: 8 },
+        { name: 'Snack', count: 12 },
+        { name: 'Dessert', count: 5 }
+      ];
+
+      this.$nextTick(() => {
+        this.initCharts();
+      });
+    },
+
+    createRevenueChart() {
+      const ctx = this.$refs.revenueChart?.getContext('2d');
+      if (!ctx) return;
+
+      if (this.revenueChart) {
+        this.revenueChart.destroy();
+      }
+
+      const labels = this.chartData.revenue.map(item => {
+        const date = new Date(item.date);
+        return date.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' });
+      });
+      const data = this.chartData.revenue.map(item => item.revenue);
+
+      this.revenueChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Pendapatan',
+            data: data,
+            borderColor: '#3B82F6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#3B82F6',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(0, 0, 0, 0.05)'
+              },
+              ticks: {
+                callback: function(value) {
+                  return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    },
+
+    createOrdersChart() {
+      const ctx = this.$refs.ordersChart?.getContext('2d');
+      if (!ctx) return;
+
+      if (this.ordersChart) {
+        this.ordersChart.destroy();
+      }
+
+      const labels = this.chartData.orders.map(item => {
+        const date = new Date(item.date);
+        return date.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' });
+      });
+      const data = this.chartData.orders.map(item => item.orders);
+
+      this.ordersChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Pesanan',
+            data: data,
+            backgroundColor: 'rgba(34, 197, 94, 0.8)',
+            borderColor: '#22C55E',
+            borderWidth: 1,
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(0, 0, 0, 0.05)'
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    },
+
+    createCategoryChart() {
+      const ctx = this.$refs.categoryChart?.getContext('2d');
+      if (!ctx) return;
+
+      if (this.categoryChart) {
+        this.categoryChart.destroy();
+      }
+
+      const labels = this.chartData.categories.map(item => item.name);
+      const data = this.chartData.categories.map(item => item.count);
+      const colors = [
+        '#3B82F6', '#22C55E', '#F59E0B', '#EF4444', 
+        '#8B5CF6', '#06B6D4', '#F97316', '#84CC16'
+      ];
+
+      this.categoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: colors.slice(0, labels.length),
+            borderWidth: 0,
+            cutout: '60%'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 20,
+                usePointStyle: true,
+                pointStyle: 'circle'
+              }
+            }
+          }
+        }
+      });
     },
     formatNumber(value) {
       try {

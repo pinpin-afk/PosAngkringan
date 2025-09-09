@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\APi\RoleController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ChartController;
+use App\Http\Controllers\Admin\OwnerController;
 use App\Http\Controllers\Kasir\PosController;
 use App\Http\Controllers\UniversalController;
 use App\Http\Controllers\UniversalAdminController;
@@ -66,6 +68,16 @@ Route::prefix('admin')->group(function () {
     Route::post('/logout', [IsolatedGuardAuthController::class, 'adminLogout'])->name('admin.logout');
 });
 
+// Owner Authentication (separate page, uses admin guard with owner role)
+Route::prefix('owner')->group(function () {
+    Route::get('/login', function () {
+        return view('auth.owner-login-vue');
+    })->name('owner.login');
+
+    Route::post('/login', [IsolatedGuardAuthController::class, 'ownerLogin']);
+    Route::post('/logout', [IsolatedGuardAuthController::class, 'ownerLogout'])->name('owner.logout');
+});
+
 // Kasir Authentication
 Route::prefix('kasir')->group(function () {
     Route::get('/login', function () {
@@ -96,6 +108,15 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::get('/orders', [UniversalAdminController::class, 'orders'])->name('orders');
     Route::get('/users', [UniversalAdminController::class, 'users'])->name('users');
     Route::get('/roles', [UniversalAdminController::class, 'roles'])->name('roles');
+    
+    // Chart API routes
+    Route::get('/dashboard/revenue-chart', [ChartController::class, 'revenueChart'])->name('dashboard.revenue-chart');
+    Route::get('/dashboard/orders-chart', [ChartController::class, 'ordersChart'])->name('dashboard.orders-chart');
+    Route::get('/dashboard/categories-chart', [ChartController::class, 'categoriesChart'])->name('dashboard.categories-chart');
+
+    // Owner Dashboard
+    Route::get('/owner', [OwnerController::class, 'index'])->name('owner');
+    Route::get('/owner/summary', [OwnerController::class, 'summary'])->name('owner.summary');
 });
 
 // Kasir Routes (Kasir only)

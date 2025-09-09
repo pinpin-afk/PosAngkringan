@@ -5,7 +5,17 @@
   <div class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-800 transform transition-transform duration-300 ease-in-out lg:translate-x-0"
        :class="{ '-translate-x-full': !open, 'translate-x-0': open }">
     <div class="flex items-center justify-between h-16 bg-gray-900 px-4">
-      <h1 class="text-lg font-bold text-white">Dashboard Angkringan</h1>
+      <div class="flex items-center space-x-3 min-w-0">
+        <img 
+          src="/assets/img/WhatsApp Image 2025-09-07 at 17.12.58.jpeg" 
+          alt="Logo Angkringan" 
+          class="w-8 h-8 rounded-lg object-cover flex-shrink-0"
+        >
+        <div class="min-w-0 flex-1">
+          <h1 class="text-lg font-bold text-white truncate">Dashboard</h1>
+          <p class="text-xs text-gray-300 truncate">Angkringan</p>
+        </div>
+      </div>
       <button @click="$emit('toggle')" class="lg:hidden text-white hover:text-gray-300">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

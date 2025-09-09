@@ -10,7 +10,7 @@ class RoleController extends Controller
 {
     public function index()
     {
-        $roles = [
+        $baseRoles = [
             [
                 'name' => 'admin',
                 'description' => 'Administrator dengan akses penuh',
@@ -32,10 +32,39 @@ class RoleController extends Controller
                     'orders' => true,
                     'users' => false
                 ]
-            ]
+            ],
+            [
+                'name' => 'owner',
+                'description' => 'Pemilik usaha, akses ringkasan & kontrol tinggi',
+                'permissions' => [
+                    'dashboard' => true,
+                    'pos' => false,
+                    'products' => true,
+                    'orders' => true,
+                    'users' => true
+                ]
+            ],
         ];
+        // Merge with distinct roles found in users table (fallback permissions all false)
+        $distinctRoles = User::query()->select('role')->distinct()->pluck('role')->filter()->values();
+        $known = collect($baseRoles)->keyBy('name');
+        foreach ($distinctRoles as $r) {
+            if (!$known->has($r)) {
+                $known->put($r, [
+                    'name' => $r,
+                    'description' => 'Role dinamis dari data pengguna',
+                    'permissions' => [
+                        'dashboard' => false,
+                        'pos' => false,
+                        'products' => false,
+                        'orders' => false,
+                        'users' => false,
+                    ]
+                ]);
+            }
+        }
 
-        return response()->json($roles);
+        return response()->json(array_values($known->all()));
     }
 
     public function getStats()
@@ -52,7 +81,7 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:users,role',
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:500',
             'permissions' => 'required|array',
             'permissions.*' => 'string|in:dashboard,pos,products,orders,users'
@@ -72,7 +101,7 @@ class RoleController extends Controller
     public function updateUserRole(Request $request, User $user)
     {
         $request->validate([
-            'role' => 'required|in:admin,kasir'
+            'role' => 'required|in:admin,kasir,owner'
         ]);
 
         // Prevent changing the last admin

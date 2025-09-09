@@ -95,6 +95,35 @@ class IsolatedGuardAuthController extends Controller
         return response()->json(['errors' => ['Email atau password salah.']], 422);
     }
     
+    public function ownerLogin(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if (Auth::guard('admin')->attempt($credentials)) {
+            $user = Auth::guard('admin')->user();
+
+            // Only allow users with role 'owner'
+            $isOwner = ($user->role ?? null) === 'owner' || (method_exists($user, 'isOwner') && $user->isOwner());
+            if (!$isOwner) {
+                Auth::guard('admin')->logout();
+                return response()->json(['errors' => ['Hanya owner yang bisa login di sini.']], 422);
+            }
+
+            $request->session()->regenerate();
+            $request->session()->put('owner_user_id', $user->id);
+            $request->session()->put('owner_user_name', $user->name);
+            $request->session()->put('owner_user_email', $user->email);
+            $request->session()->put('owner_user_role', 'owner');
+
+            return response()->json(['success' => true, 'redirect' => route('admin.owner')]);
+        }
+
+        return response()->json(['errors' => ['Email atau password salah.']], 422);
+    }
+    
     public function adminLogout(Request $request)
     {
         $adminSessionId = $request->session()->get('admin_session_id');
@@ -141,6 +170,20 @@ class IsolatedGuardAuthController extends Controller
         $this->clearGuardAuthentication($request, 'kasir');
         
         return redirect()->route('kasir.login')->with('success', 'Kasir telah logout.');
+    }
+    
+    public function ownerLogout(Request $request)
+    {
+        $request->session()->forget([
+            'owner_user_id',
+            'owner_user_name',
+            'owner_user_email',
+            'owner_user_role'
+        ]);
+
+        $this->clearGuardAuthentication($request, 'admin');
+
+        return redirect()->route('owner.login')->with('success', 'Owner telah logout.');
     }
     
     private function clearGuardAuthentication(Request $request, $guard)
@@ -201,6 +244,23 @@ class IsolatedGuardAuthController extends Controller
             }
         }
         
+        return response()->json(['authenticated' => false]);
+    }
+    
+    public function checkOwnerSession(Request $request)
+    {
+        $user = Auth::guard('admin')->user();
+        if ($user && (($user->role ?? null) === 'owner' || (method_exists($user, 'isOwner') && $user->isOwner()))) {
+            return response()->json([
+                'authenticated' => true,
+                'role' => 'owner',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ],
+            ]);
+        }
         return response()->json(['authenticated' => false]);
     }
 }

@@ -23,6 +23,16 @@ class DashboardController extends Controller
         $todayRevenue = $todayOrders->sum('total');
         $todayOrdersCount = $todayOrders->count();
 
+        //total produk dan kategori
+        $totalProducts = Product::all()->count();
+        $totalCategories = Category::all()->count();
+
+        //total pesanan
+        $totalOrders = Order::where('status', 'completed')->count();
+
+        //total semua pendapatan
+        $totalRevenue = Order::where('status', 'completed')->sum('total');
+
         // Statistik penjualan bulan ini
         $monthOrders = Order::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
@@ -54,7 +64,11 @@ class DashboardController extends Controller
             'monthRevenue' => $monthRevenue,
             'monthOrdersCount' => $monthOrdersCount,
             'topProducts' => $topProducts,
-            'chartData' => $salesChart
+            'chartData' => $salesChart,
+            'totalProducts' => $totalProducts,
+            'totalCategories' => $totalCategories,
+            'totalOrders' => $totalOrders,
+            'totalRevenue' => $totalRevenue
         ]);
     }
 }
