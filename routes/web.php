@@ -36,6 +36,12 @@ Route::get('/run-migrate', function () {
     return '<pre>' . \Artisan::output() . '</pre>';
 });
 
+Route::get('/run-seed', function () {
+    // Jalankan db:seed dan tampilkan outputnya!
+    \Artisan::call('db:seed', ['--force' => true]);
+    return '<pre>' . \Artisan::output() . '</pre>';
+});
+
 // Redirect root to kasir login
 Route::get('/', function () {
     return redirect()->route('kasir.login');
