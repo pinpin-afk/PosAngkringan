@@ -20,8 +20,8 @@
     </div>
 
     <!-- Search and Filter -->
-    <div class="bg-white shadow-xl rounded-lg p-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-white shadow-xl rounded-lg p-4 md:p-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">
             <div class="flex items-center space-x-2">
@@ -131,7 +131,7 @@
       </div>
       
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
+        <table class="min-w-full divide-y divide-gray-200" style="min-width: 800px;">
           <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
             <tr>
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -186,28 +186,28 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="product in paginatedProducts" :key="product.id" class="hover:bg-gray-50 transition-colors duration-150">
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-3 md:px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
-                  <div class="flex-shrink-0 h-12 w-12">
-                    <div class="h-12 w-12 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-                      <span class="text-white font-bold text-lg">{{ product.name.charAt(0).toUpperCase() }}</span>
+                  <div class="flex-shrink-0 h-10 w-10 md:h-12 md:w-12">
+                    <div class="h-10 w-10 md:h-12 md:w-12 rounded-lg bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                      <span class="text-white font-bold text-sm md:text-lg">{{ product.name.charAt(0).toUpperCase() }}</span>
                     </div>
                   </div>
-                  <div class="ml-4">
-                    <div class="text-sm font-semibold text-gray-900">{{ product.name }}</div>
-                    <div class="text-sm text-gray-500 truncate max-w-xs">{{ product.description }}</div>
+                  <div class="ml-2 md:ml-4 min-w-0">
+                    <div class="text-sm font-semibold text-gray-900 truncate">{{ product.name }}</div>
+                    <div class="text-xs md:text-sm text-gray-500 truncate max-w-32 md:max-w-xs">{{ product.description }}</div>
                   </div>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+              <td class="px-3 md:px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center px-2 md:px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
                   {{ product.category?.name || 'Tidak ada kategori' }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-3 md:px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-semibold text-gray-900">Rp {{ formatPrice(product.price) }}</div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-3 md:px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="text-sm font-semibold text-gray-900">{{ product.stock }}</div>
                   <div class="ml-2">
@@ -215,34 +215,35 @@
                   </div>
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-3 md:px-6 py-4 whitespace-nowrap">
                 <span 
                   :class="product.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
-                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
+                  class="inline-flex items-center px-2 md:px-3 py-1 rounded-full text-xs font-semibold"
                 >
-                  <div :class="product.is_active ? 'bg-green-400' : 'bg-red-400'" class="w-2 h-2 rounded-full mr-2"></div>
-                  {{ product.is_active ? 'Aktif' : 'Tidak Aktif' }}
+                  <div :class="product.is_active ? 'bg-green-400' : 'bg-red-400'" class="w-2 h-2 rounded-full mr-1 md:mr-2"></div>
+                  <span class="hidden sm:inline">{{ product.is_active ? 'Aktif' : 'Tidak Aktif' }}</span>
+                  <span class="sm:hidden">{{ product.is_active ? 'A' : 'TA' }}</span>
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <div class="flex space-x-2">
+              <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div class="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2">
                   <button 
                     @click="editProduct(product)"
-                    class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md transition-colors duration-150 flex items-center space-x-1"
+                    class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2 md:px-3 py-1 rounded-md transition-colors duration-150 flex items-center justify-center space-x-1 text-xs"
                   >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                     </svg>
-                    <span>Edit</span>
+                    <span class="hidden sm:inline">Edit</span>
                   </button>
                   <button 
                     @click="deleteProduct(product.id)"
-                    class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors duration-150 flex items-center space-x-1"
+                    class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-2 md:px-3 py-1 rounded-md transition-colors duration-150 flex items-center justify-center space-x-1 text-xs"
                   >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
-                    <span>Hapus</span>
+                    <span class="hidden sm:inline">Hapus</span>
                   </button>
                 </div>
               </td>
@@ -319,26 +320,26 @@
     </div>
 
     <!-- Add/Edit Product Modal -->
-    <div v-if="showAddModal || showEditModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all">
-        <div class="px-6 py-4 border-b border-gray-200">
+    <div v-if="showAddModal || showEditModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-2 sm:p-4">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all max-h-[90vh] overflow-y-auto">
+        <div class="px-4 sm:px-6 py-4 border-b border-gray-200">
           <div class="flex items-center justify-between">
-            <h3 class="text-xl font-bold text-gray-900">
+            <h3 class="text-lg sm:text-xl font-bold text-gray-900">
               {{ showAddModal ? 'Tambah Produk Baru' : 'Edit Produk' }}
             </h3>
             <button 
               @click="closeModal"
-              class="text-gray-400 hover:text-gray-600 transition-colors duration-150"
+              class="text-gray-400 hover:text-gray-600 transition-colors duration-150 p-1"
             >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>
           </div>
         </div>
         
-        <form @submit.prevent="submitProduct" class="px-6 py-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form @submit.prevent="submitProduct" class="px-4 sm:px-6 py-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Produk</label>
               <input 
@@ -386,7 +387,7 @@
               >
             </div>
             
-            <div class="md:col-span-2">
+            <div class="sm:col-span-2">
               <label class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi</label>
               <textarea 
                 v-model="productForm.description"
@@ -396,7 +397,7 @@
               ></textarea>
             </div>
             
-            <div class="md:col-span-2">
+            <div class="sm:col-span-2">
               <div class="flex items-center">
                 <input 
                   v-model="productForm.is_active"
@@ -410,18 +411,18 @@
             </div>
           </div>
           
-          <div class="flex justify-end space-x-3 mt-8 pt-4 border-t border-gray-200">
+          <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-6 sm:mt-8 pt-4 border-t border-gray-200">
             <button 
               type="button"
               @click="closeModal"
-              class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+              class="w-full sm:w-auto px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-150"
             >
               Batal
             </button>
             <button 
               type="submit"
               :disabled="loading"
-              class="px-6 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg text-sm font-medium hover:from-green-700 hover:to-blue-700 disabled:opacity-50 transition-all duration-150 flex items-center space-x-2"
+              class="w-full sm:w-auto px-6 py-2 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg text-sm font-medium hover:from-green-700 hover:to-blue-700 disabled:opacity-50 transition-all duration-150 flex items-center justify-center space-x-2"
             >
               <svg v-if="loading" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
