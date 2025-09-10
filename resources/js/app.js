@@ -1,6 +1,9 @@
 import './bootstrap';
 import { createApp } from 'vue';
 import PosApp from './components/PosApp.vue';
+import PosAppResponsive from './components/PosAppResponsive.vue';
+import PaymentView from './components/PaymentView.vue';
+import PosMemberManagement from './components/PosMemberManagement.vue';
 import AdminDashboard from './components/Admin/AdminDashboard.vue';
 import OwnerDashboard from './components/Owner/OwnerDashboard.vue';
 import DashboardHome from './components/Admin/DashboardHome.vue';
@@ -11,6 +14,7 @@ import AdminLogin from './components/Auth/AdminLogin.vue';
 import KasirLogin from './components/Auth/KasirLogin.vue';
 import OwnerLogin from './components/Auth/OwnerLogin.vue';
 import UserManagement from './components/Admin/UserManagement.vue';
+import MemberManagement from './components/Admin/MemberManagement.vue';
 import RoleManagement from './components/Admin/RoleManagement.vue';
 
 // Check if we're on login pages
@@ -33,11 +37,16 @@ if (document.getElementById('admin-login-app')) {
         app.component('CategoryManagement', CategoryManagement);
         app.component('OrderManagement', OrderManagement);
         app.component('UserManagement', UserManagement);
+        app.component('MemberManagement', MemberManagement);
         app.component('RoleManagement', RoleManagement);
         
         app.mount('#app');
+    } else if (window.location.pathname.includes('/kasir/payment')) {
+        // Payment page
+        createApp(PaymentView).mount('#app');
     } else {
-        createApp(PosApp).mount('#app');
+        // Use responsive POS app that adapts to screen size
+        createApp(PosAppResponsive).mount('#app');
     }
 }
 

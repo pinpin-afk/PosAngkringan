@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\MemberController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -56,6 +57,16 @@ Route::prefix('pos')->middleware('web')->group(function () {
     Route::get('/orders/{order}/status', [OrderController::class, 'checkStatus']);
     // Generic Midtrans charge
     Route::post('/orders/charge', [OrderController::class, 'charge']);
+});
+
+// Admin API Routes for Member Management
+Route::prefix('admin')->group(function () {
+    Route::get('/members', [MemberController::class, 'index']);
+    Route::post('/members', [MemberController::class, 'store']);
+    Route::get('/members/{member}', [MemberController::class, 'show']);
+    Route::put('/members/{member}', [MemberController::class, 'update']);
+    Route::delete('/members/{member}', [MemberController::class, 'destroy']);
+    Route::get('/members/search', [MemberController::class, 'search']);
 });
 
 // (Removed) Midtrans Webhook

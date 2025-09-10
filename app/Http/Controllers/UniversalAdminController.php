@@ -50,6 +50,11 @@ class UniversalAdminController extends Controller
         return view('admin.users');
     }
     
+    public function members()
+    {
+        return view('admin.members');
+    }
+    
     public function roles()
     {
         return view('admin.roles');

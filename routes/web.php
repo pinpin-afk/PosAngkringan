@@ -13,6 +13,7 @@ use App\Http\Controllers\Kasir\PosController;
 use App\Http\Controllers\UniversalController;
 use App\Http\Controllers\UniversalAdminController;
 use App\Http\Controllers\IsolatedGuardAuthController;
+use App\Http\Controllers\MemberController;
 
 
 /*
@@ -28,15 +29,15 @@ use App\Http\Controllers\IsolatedGuardAuthController;
 // ============================================================================
 // PUBLIC ROUTES
 // ============================================================================
-// Route::get('/run-migrate', function () {
-//     // Pastikan table sessions migration sudah dibuat
-//     if (!file_exists(database_path('migrations/' . date('Y_m_d') . '_000000_create_sessions_table.php'))) {
-//         \Artisan::call('session:table');
-//     }
-//     // Jalankan migrate dan tampilkan outputnya!
-//     \Artisan::call('migrate', ['--force' => true]);
-//     return '<pre>' . \Artisan::output() . '</pre>';
-// });
+Route::get('/run-migrate', function () {
+    // Pastikan table sessions migration sudah dibuat
+    if (!file_exists(database_path('migrations/' . date('Y_m_d') . '_000000_create_sessions_table.php'))) {
+        \Artisan::call('session:table');
+    }
+    // Jalankan migrate dan tampilkan outputnya!
+    \Artisan::call('migrate', ['--force' => true]);
+    return '<pre>' . \Artisan::output() . '</pre>';
+});
 
 // Route::get('/run-seed', function () {
 //     // Jalankan db:seed dan tampilkan outputnya!
@@ -107,6 +108,9 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::get('/categories', [UniversalAdminController::class, 'categories'])->name('categories');
     Route::get('/orders', [UniversalAdminController::class, 'orders'])->name('orders');
     Route::get('/users', [UniversalAdminController::class, 'users'])->name('users');
+    Route::get('/members', function () {
+        return view('admin.members');
+    })->name('members');
     Route::get('/roles', [UniversalAdminController::class, 'roles'])->name('roles');
     
     // Chart API routes
@@ -122,6 +126,9 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
 // Kasir Routes (Kasir only)
 Route::middleware(['auth:kasir'])->prefix('kasir')->name('kasir.')->group(function () {
     Route::get('/pos', [UniversalAdminController::class, 'pos'])->name('pos');
+    Route::get('/payment', function () {
+        return view('kasir.payment');
+    })->name('payment');
 });
 
 // Cross-Role Access Routes
@@ -164,6 +171,14 @@ Route::prefix('pos')->group(function () {
     Route::get('/products/{product}', [ProductController::class, 'show']);
     Route::put('/products/{product}', [ProductController::class, 'update']);
     Route::delete('/products/{product}', [ProductController::class, 'destroy']);
+    
+    // Members API
+    Route::get('/members/api', [MemberController::class, 'index']);
+    Route::post('/members/api', [MemberController::class, 'store']);
+    Route::get('/members/api/{member}', [MemberController::class, 'show']);
+    Route::put('/members/api/{member}', [MemberController::class, 'update']);
+    Route::delete('/members/api/{member}', [MemberController::class, 'destroy']);
+    Route::get('/members/api/search', [MemberController::class, 'search']);
 
     // Categories API
     Route::get('/categories', [CategoryController::class, 'index']);
@@ -195,4 +210,12 @@ Route::prefix('pos')->group(function () {
     Route::put('/roles/{role}', [RoleController::class, 'update']);
     Route::delete('/roles/{role}', [RoleController::class, 'destroy']);
     Route::get('/role-stats', [RoleController::class, 'getStats'])->name('role.stats');
+
+    // Member API Routes
+    Route::get('/members/api', [MemberController::class, 'index']);
+    Route::post('/members/api', [MemberController::class, 'store']);
+    Route::get('/members/api/{member}', [MemberController::class, 'show']);
+    Route::put('/members/api/{member}', [MemberController::class, 'update']);
+    Route::delete('/members/api/{member}', [MemberController::class, 'destroy']);
+    Route::get('/members/api/search', [MemberController::class, 'search']);
 });

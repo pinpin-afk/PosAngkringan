@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Member;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
@@ -31,6 +32,8 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'payment_method' => 'required|in:cash,card,qris',
             'notes' => 'nullable|string',
+            'selected_member' => 'nullable|array',
+            'points_earned' => 'nullable|integer|min:0',
         ]);
         $orderNumber = 'ORD-' . date('Ymd') . '-' . Str::random(6);
 
@@ -53,7 +56,8 @@ class OrderController extends Controller
         $tax = $subtotal * 0.1; // 10% tax
         $total = $subtotal + $tax;
 
-        $status = $request->payment_method === 'qris' ? 'pending' : 'completed';
+        $isDraft = (bool) $request->boolean('draft');
+        $status = $isDraft ? 'pending' : ($request->payment_method === 'qris' ? 'pending' : 'completed');
 
         $processedBy = $request->processed_by
             ?? session('kasir_user_name')
@@ -81,10 +85,20 @@ class OrderController extends Controller
             OrderItem::create($item);
         }
 
-        // For non-QRIS, decrease stock immediately
-        if ($request->payment_method !== 'qris') {
+        // For non-QRIS and not draft, decrease stock immediately
+        if ($request->payment_method !== 'qris' && !$isDraft) {
             foreach ($request->items as $item) {
                 Product::where('id', $item['product_id'])->decrement('stock', $item['quantity']);
+            }
+        }
+
+        // Add points to member only when completed immediately (not draft and not QRIS)
+        if (!$isDraft && $request->payment_method !== 'qris') {
+            if ($request->selected_member && isset($request->selected_member['id'])) {
+                $member = Member::find($request->selected_member['id']);
+                if ($member && $request->points_earned > 0) {
+                    $member->addPoints($request->points_earned);
+                }
             }
         }
 
@@ -101,7 +115,9 @@ class OrderController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'notes' => 'nullable|string',
-            'payment_type' => 'required|in:qris,gopay,shopeepay'
+            'payment_type' => 'required|in:qris,gopay,shopeepay',
+            'selected_member' => 'nullable|array',
+            'points_earned' => 'nullable|integer|min:0',
         ]);
 
         $orderNumber = strtoupper($request->payment_type) . '-' . date('Ymd') . '-' . Str::random(10);
@@ -196,6 +212,9 @@ class OrderController extends Controller
             Log::warning('orders.payment_type.save_failed', ['error' => $e->getMessage()]);
         }
 
+        // Add points to member if selected (for QRIS, points will be added when payment is confirmed)
+        // This will be handled in the webhook when payment is successful
+
         return response()->json([
             'order_id' => $order->id,
             'order_number' => $order->order_number,
@@ -223,9 +242,30 @@ class OrderController extends Controller
     {
         $request->validate([
             'status' => 'required|in:pending,completed,cancelled',
+            'selected_member' => 'nullable|array',
+            'selected_member.id' => 'nullable|integer|exists:members,id',
+            'points_earned' => 'nullable|integer|min:0',
         ]);
 
-        $order->update($request->only('status'));
+        $previousStatus = $order->status;
+        $newStatus = $request->input('status');
+
+        // Transition handling
+        if ($previousStatus === 'pending' && $newStatus === 'completed') {
+            // Decrease stock for each item
+            foreach ($order->orderItems as $item) {
+                Product::where('id', $item->product_id)->decrement('stock', $item->quantity);
+            }
+            // Add points to member if provided on completion
+            if ($request->filled('selected_member.id') && $request->input('points_earned') > 0) {
+                $member = Member::find($request->input('selected_member.id'));
+                if ($member) {
+                    $member->addPoints((int) $request->input('points_earned'));
+                }
+            }
+        }
+
+        $order->update(['status' => $newStatus]);
         return response()->json($order->load('orderItems.product'));
     }
 }

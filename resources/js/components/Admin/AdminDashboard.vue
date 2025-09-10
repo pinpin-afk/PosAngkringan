@@ -180,6 +180,25 @@
         <OrderManagement v-else-if="currentPage === 'orders'" />
         <UserManagement v-else-if="currentPage === 'users'" />
         <RoleManagement v-else-if="currentPage === 'roles'" />
+        <div v-else-if="currentPage === 'members'" class="space-y-6">
+          <!-- Breadcrumb -->
+          <nav class="flex items-center space-x-2 text-sm text-gray-600">
+            <button @click="updateCurrentPage('dashboard')" class="flex items-center space-x-1 hover:text-gray-900 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"></path>
+              </svg>
+              <span>Dashboard</span>
+            </button>
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+            <span class="font-medium text-gray-900">Kelola Member</span>
+          </nav>
+          
+          <!-- Member Management Component -->
+          <MemberManagement />
+        </div>
         <div v-else-if="currentPage === 'pos'" id="pos-app"></div>
       </main>
       <AdminFooter />
@@ -195,6 +214,7 @@ import { Chart, registerables } from 'chart.js';
 import AdminSidebar from './Layout/AdminSidebar.vue';
 import AdminNavbar from './Layout/AdminNavbar.vue';
 import AdminFooter from './Layout/AdminFooter.vue';
+import MemberManagement from './MemberManagement.vue';
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -203,7 +223,8 @@ export default {
   components: {
     AdminSidebar,
     AdminNavbar,
-    AdminFooter
+    AdminFooter,
+    MemberManagement
   },
   data() {
     return {
@@ -269,6 +290,9 @@ export default {
       } else if (path.includes('/admin/users')) {
         this.currentPage = 'users';
         this.currentPageTitle = 'Manajemen User';
+      } else if (path.includes('/admin/members')) {
+        this.currentPage = 'members';
+        this.currentPageTitle = 'Manajemen Member';
       } else if (path.includes('/admin/roles')) {
         this.currentPage = 'roles';
         this.currentPageTitle = 'Manajemen Role';
@@ -286,6 +310,9 @@ export default {
       if (hash === 'users') {
         this.currentPage = 'users';
         this.currentPageTitle = 'Manajemen User';
+      } else if (hash === 'members') {
+        this.currentPage = 'members';
+        this.currentPageTitle = 'Manajemen Member';
       } else if (hash === 'roles') {
         this.currentPage = 'roles';
         this.currentPageTitle = 'Manajemen Role';
