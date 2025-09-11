@@ -71,15 +71,29 @@ class PaymentWebhookController extends Controller
             return response()->json(['message' => 'no amount found'], 200);
         }
 
-        // Match to transfer orders by transfer_amount first, fallback by total+unique_code if needed
+        // Match to transfer orders by transfer_amount first (DB-agnostic),
+        // then fallback by computing (round(total) + unique_code) in PHP to avoid DB-specific casts
         $order = Order::where('payment_method', 'transfer')
             ->where('payment_status', 'pending')
-            ->where(function ($q) use ($amount) {
-                $q->where('transfer_amount', $amount)
-                  ->orWhereRaw('(CAST(total as SIGNED) + unique_code) = ?', [$amount]);
-            })
+            ->where('transfer_amount', $amount)
             ->latest()
             ->first();
+
+        if (!$order) {
+            // Fallback: scan a recent window of pending transfer orders and compute match in PHP
+            $candidates = Order::where('payment_method', 'transfer')
+                ->where('payment_status', 'pending')
+                ->latest()
+                ->limit(50)
+                ->get();
+            foreach ($candidates as $candidate) {
+                $expected = (int) round((float) $candidate->total) + (int) ($candidate->unique_code ?? 0);
+                if ($expected === (int) $amount) {
+                    $order = $candidate;
+                    break;
+                }
+            }
+        }
 
         if (!$order) {
             Log::warning('telegram.webhook.order_not_found', ['amount' => $amount]);
