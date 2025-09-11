@@ -30,7 +30,7 @@ class OrderController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'payment_method' => 'required|in:cash,card,qris',
+            'payment_method' => 'required|in:cash,card,qris,transfer',
             'notes' => 'nullable|string',
             'selected_member' => 'nullable|array',
             'points_earned' => 'nullable|integer|min:0',
@@ -66,6 +66,15 @@ class OrderController extends Controller
             ?? (optional(\Auth::guard('admin')->user())->name)
             ?? (optional(\Auth::user())->name);
 
+        // Generate unique transfer code when payment_method is transfer
+        $uniqueCode = null;
+        $transferAmount = null;
+        if ($request->payment_method === 'transfer') {
+            // 3-digit unique code 101-999 to avoid very small deltas
+            $uniqueCode = random_int(101, 999);
+            $transferAmount = (int) round($total) + $uniqueCode;
+        }
+
         $order = Order::create([
             'order_number' => $orderNumber,
             'customer_name' => $request->customer_name,
@@ -75,7 +84,10 @@ class OrderController extends Controller
             'tax' => $tax,
             'discount' => 0,
             'total' => $total,
+            'unique_code' => $uniqueCode,
+            'transfer_amount' => $transferAmount,
             'payment_method' => $request->payment_method,
+            'payment_status' => in_array($request->payment_method, ['qris', 'transfer']) ? 'pending' : 'paid',
             'status' => $status,
             'notes' => $request->notes,
         ]);
@@ -85,15 +97,15 @@ class OrderController extends Controller
             OrderItem::create($item);
         }
 
-        // For non-QRIS and not draft, decrease stock immediately
-        if ($request->payment_method !== 'qris' && !$isDraft) {
+        // For non-QRIS, non-transfer and not draft, decrease stock immediately
+        if (!in_array($request->payment_method, ['qris', 'transfer']) && !$isDraft) {
             foreach ($request->items as $item) {
                 Product::where('id', $item['product_id'])->decrement('stock', $item['quantity']);
             }
         }
 
-        // Add points to member only when completed immediately (not draft and not QRIS)
-        if (!$isDraft && $request->payment_method !== 'qris') {
+        // Add points to member only when completed immediately (not draft, not QRIS, not transfer)
+        if (!$isDraft && !in_array($request->payment_method, ['qris', 'transfer'])) {
             if ($request->selected_member && isset($request->selected_member['id'])) {
                 $member = Member::find($request->selected_member['id']);
                 if ($member && $request->points_earned > 0) {
@@ -156,6 +168,7 @@ class OrderController extends Controller
             'total' => $total,
             // keep payment_method within existing enum values; store specific type in payment_type
             'payment_method' => 'qris',
+            'payment_status' => 'pending',
             'status' => 'pending',
             'notes' => $request->notes,
         ]);
@@ -267,5 +280,75 @@ class OrderController extends Controller
 
         $order->update(['status' => $newStatus]);
         return response()->json($order->load('orderItems.product'));
+    }
+
+    public function verifyTransfer(Request $request, Order $order)
+    {
+        $request->validate([
+            'payment_status' => 'required|in:pending,verified,paid,failed',
+            'transfer_notes' => 'nullable|string|max:1000',
+        ]);
+
+        $order->update([
+            'payment_status' => $request->payment_status,
+            'transfer_verified_at' => $request->payment_status === 'verified' ? now() : null,
+            'transfer_notes' => $request->transfer_notes,
+        ]);
+
+        // If payment is verified and order is pending, complete the order
+        if ($request->payment_status === 'verified' && $order->status === 'pending') {
+            $order->update(['status' => 'completed']);
+            
+            // Decrease stock for each item
+            foreach ($order->orderItems as $item) {
+                Product::where('id', $item->product_id)->decrement('stock', $item->quantity);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status pembayaran berhasil diperbarui',
+            'order' => $order->load('orderItems.product')
+        ]);
+    }
+
+    public function report(Request $request)
+    {
+        $from = $request->query('from');
+        $to = $request->query('to');
+        $cashier = $request->query('cashier');
+        $method = $request->query('method');
+        $status = $request->query('status');
+
+        $query = Order::query()->with('orderItems');
+        if ($from) { $query->where('created_at', '>=', $from); }
+        if ($to) { $query->where('created_at', '<=', $to); }
+        if ($cashier) { $query->where('processed_by', $cashier); }
+        if ($method) { $query->where('payment_method', $method); }
+        if ($status) { $query->where('status', $status); }
+
+        $orders = $query->orderByDesc('created_at')->get();
+
+        $totalSales = (float) $orders->sum('total');
+        $totalOrders = (int) $orders->count();
+        $itemsCount = (int) $orders->sum(function ($o) { return $o->orderItems->sum('quantity'); });
+        $avgOrder = $totalOrders > 0 ? $totalSales / $totalOrders : 0;
+
+        // Breakdown per method
+        $byMethod = $orders->groupBy('payment_method')->map(function($grp){
+            $sum = (float) $grp->sum('total');
+            return [ 'count' => $grp->count(), 'total' => $sum ];
+        });
+
+        return response()->json([
+            'summary' => [
+                'total_sales' => $totalSales,
+                'total_orders' => $totalOrders,
+                'total_items' => $itemsCount,
+                'avg_order' => $avgOrder,
+                'by_method' => $byMethod,
+            ],
+            'orders' => $orders,
+        ]);
     }
 }

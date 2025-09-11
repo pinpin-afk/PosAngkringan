@@ -129,6 +129,9 @@ Route::middleware(['auth:kasir'])->prefix('kasir')->name('kasir.')->group(functi
     Route::get('/payment', function () {
         return view('kasir.payment');
     })->name('payment');
+    Route::get('/report', function () {
+        return view('kasir.report');
+    })->name('report');
 });
 
 // Cross-Role Access Routes

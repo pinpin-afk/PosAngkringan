@@ -13,11 +13,21 @@
               >
             </div>
             <div>
-              <h1 class="text-lg font-semibold transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">POS Angkringan</h1>
-              <p class="text-xs transition-colors duration-300" :class="isDarkMode ? 'text-gray-300' : 'text-gray-500'">{{ processedBy || 'Kasir' }}</p>
+              <h1 class="text-lg font-semibold transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Lesehan 3 Point</h1>
+              <!-- <p class="text-xs transition-colors duration-300" :class="isDarkMode ? 'text-gray-300' : 'text-gray-500'">{{ processedBy || 'Kasir' }}</p> -->
             </div>
           </div>
           <div class="flex items-center space-x-2">
+            <!-- Sidebar Toggle (Hamburger) -->
+            <button
+              @click="showSidebar = true"
+              class="p-2 rounded-lg transition-colors duration-300"
+              :class="isDarkMode ? 'hover:bg-gray-700 text-gray-200' : 'hover:bg-gray-100 text-gray-700'"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+            </button>
             <button 
               @click="toggleDarkMode"
               class="p-2 rounded-lg transition-colors duration-300" :class="isDarkMode ? 'hover:bg-gray-700 text-yellow-400' : 'hover:bg-gray-100 text-gray-600'"
@@ -28,21 +38,6 @@
               <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
               </svg>
-            </button>
-            <button 
-              @click="showMemberManagement = true"
-              class="px-3 py-1.5 text-sm font-medium transition-colors duration-300 rounded-lg flex items-center space-x-1" :class="isDarkMode ? 'text-white bg-green-600 hover:bg-green-700' : 'text-white bg-green-600 hover:bg-green-700'"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-              </svg>
-              <span>Member</span>
-            </button>
-            <button 
-              @click="logout"
-              class="px-3 py-1.5 text-sm font-medium transition-colors duration-300 rounded-lg" :class="isDarkMode ? 'text-gray-200 bg-gray-700 hover:bg-gray-600' : 'text-gray-700 bg-gray-100 hover:bg-gray-200'"
-            >
-              Logout
             </button>
           </div>
         </div>
@@ -141,9 +136,15 @@
                 product.stock <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
               ]"
             >
-            <!-- Product Image Placeholder -->
-            <div class="w-full h-20 rounded-lg mb-2 flex items-center justify-center transition-colors duration-300" :class="isDarkMode ? 'bg-gray-700' : 'bg-gray-100'">
-              <svg class="w-6 h-6 transition-colors duration-300" :class="isDarkMode ? 'text-gray-500' : 'text-gray-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Product Image -->
+            <div class="w-full h-20 rounded-lg mb-2 flex items-center justify-center transition-colors duration-300 overflow-hidden" :class="isDarkMode ? 'bg-gray-700' : 'bg-gray-100'">
+              <img 
+                v-if="product.image_url" 
+                :src="product.image_url" 
+                :alt="product.name"
+                class="w-full h-full object-cover rounded-lg"
+              >
+              <svg v-else class="w-6 h-6 transition-colors duration-300" :class="isDarkMode ? 'text-gray-500' : 'text-gray-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
               </svg>
             </div>
@@ -244,6 +245,59 @@
         </div>
       </div>
     </div>
+
+    <!-- Sidebar Drawer -->
+    <transition name="fade">
+      <div v-if="showSidebar" class="fixed inset-0 z-50" @click.self="showSidebar = false">
+        <div class="absolute inset-0 bg-black/40"></div>
+        <!-- Compact Top Sheet (quarter screen) -->
+        <aside class="absolute top-0 left-0 right-0 mx-auto w-full max-w-md p-4 shadow-2xl rounded-b-2xl"
+             :class="isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'">
+          <!-- Sheet Header -->
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg overflow-hidden bg-blue-600 flex items-center justify-center">
+                <img src="/assets/img/WhatsApp Image 2025-09-07 at 17.12.58.jpeg" alt="Logo" class="w-7 h-7 object-cover" />
+              </div>
+              <div>
+                <div class="text-sm text-gray-500" :class="isDarkMode ? 'text-gray-400' : 'text-gray-500'">Kasir</div>
+                <div class="font-semibold -mt-0.5">{{ processedBy || '—' }}</div>
+              </div>
+            </div>
+            <button @click="showSidebar = false" class="p-2 rounded"
+                    :class="isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <!-- Compact Grid Actions -->
+          <div class="grid grid-cols-3 gap-2">
+            <button @click="goToReport(); showSidebar = false" class="flex flex-col items-center justify-center px-3 py-3 rounded-lg"
+                    :class="isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'">
+              <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-6m3 6v-4M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H9l-4 4v10a2 2 0 002 2z" />
+              </svg>
+              <span class="text-xs">Laporan</span>
+            </button>
+            <button @click="showMemberManagement = true; showSidebar = false" class="flex flex-col items-center justify-center px-3 py-3 rounded-lg"
+                    :class="isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'">
+              <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+              </svg>
+              <span class="text-xs">Member</span>
+            </button>
+            <button @click="logout(); showSidebar = false" class="flex flex-col items-center justify-center px-3 py-3 rounded-lg"
+                    :class="isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'">
+              <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span class="text-xs">Logout</span>
+            </button>
+          </div>
+        </aside>
+      </div>
+    </transition>
 
     <!-- Mobile Member & Table Input -->
     <div v-if="cart.length > 0" class="fixed bottom-0 left-0 right-0 border-t p-4 z-40 transition-colors duration-300" :class="isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'">
@@ -517,6 +571,7 @@ export default {
   data() {
     return {
       activeTab: 'products',
+      showSidebar: false,
       products: [],
       categories: [],
       selectedCategory: '',
@@ -813,6 +868,9 @@ export default {
     cancelQrisPayment() {
       this.showQrisModal = false;
       this.stopQrisPolling();
+    },
+    goToReport() {
+      window.location.href = '/kasir/report';
     },
     async checkPaymentStatus() {
       try {

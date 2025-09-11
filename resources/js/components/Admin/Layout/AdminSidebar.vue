@@ -2,9 +2,13 @@
   <!-- Mobile overlay -->
   <div v-if="open" class="fixed inset-0 z-40 lg:hidden" style="background-color: rgba(30, 41, 59, 0.7);" @click="$emit('toggle')"></div>
   
-  <div class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-800 transform transition-transform duration-300 ease-in-out lg:translate-x-0"
-       :class="{ '-translate-x-full': !open, 'translate-x-0': open }">
-    <div class="flex items-center justify-between h-16 bg-gray-900 px-4">
+  <div class="fixed inset-y-0 left-0 z-50 w-64 transform transition-all duration-300 ease-in-out lg:translate-x-0"
+       :class="[
+         { '-translate-x-full': !open, 'translate-x-0': open },
+         isDarkMode ? 'bg-gray-800' : 'bg-gray-800'
+       ]">
+    <div class="flex items-center justify-between h-16 px-4 transition-colors duration-300"
+         :class="isDarkMode ? 'bg-gray-900' : 'bg-gray-900'">
       <div class="flex items-center space-x-3 min-w-0">
         <img 
           src="/assets/img/WhatsApp Image 2025-09-07 at 17.12.58.jpeg" 
@@ -99,7 +103,8 @@ export default {
   name: 'AdminSidebar',
   props: {
     open: { type: Boolean, default: true },
-    currentPage: { type: String, default: 'dashboard' }
+    currentPage: { type: String, default: 'dashboard' },
+    isDarkMode: { type: Boolean, default: false }
   }
 }
 </script>

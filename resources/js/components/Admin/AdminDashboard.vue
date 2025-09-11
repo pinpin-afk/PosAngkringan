@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
+  <div class="min-h-screen transition-colors duration-300" :class="isDarkMode ? 'bg-gray-900' : 'bg-gray-100'">
     <!-- Sidebar -->
-    <AdminSidebar :open="sidebarOpen" :current-page="currentPage" />
+    <AdminSidebar :open="sidebarOpen" :current-page="currentPage" :is-dark-mode="isDarkMode" />
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col lg:ml-64" :class="{ 'ml-64': sidebarOpen }">
@@ -10,8 +10,10 @@
         :title="currentPageTitle" 
         :subtitle="currentPage === 'dashboard' ? 'Ringkasan performa dan aktivitas terbaru' : ''"
         :user="user"
+        :is-dark-mode="isDarkMode"
         @toggle="toggleSidebar"
         @logout="logout"
+        @toggle-dark-mode="toggleDarkMode"
       />
 
       <!-- Page Content -->
@@ -92,12 +94,12 @@
           <!-- Charts Section -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <!-- Revenue Chart -->
-            <div class="bg-white rounded-xl shadow-xl p-4 sm:p-6">
+            <div class="rounded-xl shadow-xl p-4 sm:p-6 transition-colors duration-300" :class="isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'">
               <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Pendapatan 7 Hari Terakhir</h3>
+                <h3 class="text-lg font-semibold transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Pendapatan 7 Hari Terakhir</h3>
                 <div class="flex items-center space-x-2">
                   <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span class="text-sm text-gray-600">Pendapatan</span>
+                  <span class="text-sm transition-colors duration-300" :class="isDarkMode ? 'text-gray-300' : 'text-gray-600'">Pendapatan</span>
                 </div>
               </div>
               <div class="h-64">
@@ -106,12 +108,12 @@
             </div>
 
             <!-- Orders Chart -->
-            <div class="bg-white rounded-xl shadow-xl p-4 sm:p-6">
+            <div class="rounded-xl shadow-xl p-4 sm:p-6 transition-colors duration-300" :class="isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'">
               <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Pesanan 7 Hari Terakhir</h3>
+                <h3 class="text-lg font-semibold transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Pesanan 7 Hari Terakhir</h3>
                 <div class="flex items-center space-x-2">
                   <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span class="text-sm text-gray-600">Pesanan</span>
+                  <span class="text-sm transition-colors duration-300" :class="isDarkMode ? 'text-gray-300' : 'text-gray-600'">Pesanan</span>
                 </div>
               </div>
               <div class="h-64">
@@ -121,10 +123,10 @@
           </div>
 
           <!-- Product Categories Chart -->
-          <div class="bg-white rounded-xl shadow-xl p-4 sm:p-6">
+          <div class="rounded-xl shadow-xl p-4 sm:p-6 transition-colors duration-300" :class="isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'">
             <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-semibold text-gray-900">Distribusi Produk per Kategori</h3>
-              <div class="text-sm text-gray-600">{{ stats.total_products }} Total Produk</div>
+              <h3 class="text-lg font-semibold transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Distribusi Produk per Kategori</h3>
+              <div class="text-sm transition-colors duration-300" :class="isDarkMode ? 'text-gray-300' : 'text-gray-600'">{{ stats.total_products }} Total Produk</div>
             </div>
             <div class="h-80">
               <canvas ref="categoryChart" class="w-full h-full"></canvas>
@@ -133,51 +135,51 @@
 
           <!-- Quick Actions -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <a href="/admin/products" class="group rounded-xl border border-gray-200 bg-white p-5 hover:border-indigo-300 hover:shadow-md transition-all">
+            <a href="/admin/products" class="group rounded-xl border p-5 hover:shadow-md transition-all duration-300" :class="isDarkMode ? 'border-gray-700 bg-gray-800 hover:border-indigo-500' : 'border-gray-200 bg-white hover:border-indigo-300'">
               <div class="flex items-center">
-                <div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-200">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-colors duration-300" :class="isDarkMode ? 'bg-indigo-900 text-indigo-300 group-hover:bg-indigo-800' : 'bg-indigo-100 text-indigo-600 group-hover:bg-indigo-200'">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2h-3l-2-2H9L7 5H4a2 2 0 00-2 2v6m18 0v5a2 2 0 01-2 2H4a2 2 0 01-2-2v-5m18 0H2"></path>
                   </svg>
                 </div>
                 <div class="ml-4">
-                  <p class="text-sm text-gray-600">Kelola</p>
-                  <p class="text-base font-semibold text-gray-900">Produk</p>
+                  <p class="text-sm transition-colors duration-300" :class="isDarkMode ? 'text-gray-400' : 'text-gray-600'">Kelola</p>
+                  <p class="text-base font-semibold transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Produk</p>
                 </div>
               </div>
             </a>
-            <a href="/admin/categories" class="group rounded-xl border border-gray-200 bg-white p-5 hover:border-emerald-300 hover:shadow-md transition-all">
+            <a href="/admin/categories" class="group rounded-xl border p-5 hover:shadow-md transition-all duration-300" :class="isDarkMode ? 'border-gray-700 bg-gray-800 hover:border-emerald-500' : 'border-gray-200 bg-white hover:border-emerald-300'">
               <div class="flex items-center">
-                <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-200">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-colors duration-300" :class="isDarkMode ? 'bg-emerald-900 text-emerald-300 group-hover:bg-emerald-800' : 'bg-emerald-100 text-emerald-600 group-hover:bg-emerald-200'">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                   </svg>
                 </div>
                 <div class="ml-4">
-                  <p class="text-sm text-gray-600">Kelola</p>
-                  <p class="text-base font-semibold text-gray-900">Kategori</p>
+                  <p class="text-sm transition-colors duration-300" :class="isDarkMode ? 'text-gray-400' : 'text-gray-600'">Kelola</p>
+                  <p class="text-base font-semibold transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Kategori</p>
                 </div>
               </div>
             </a>
-            <a href="/admin/orders" class="group rounded-xl border border-gray-200 bg-white p-5 hover:border-amber-300 hover:shadow-md transition-all">
+            <a href="/admin/orders" class="group rounded-xl border p-5 hover:shadow-md transition-all duration-300" :class="isDarkMode ? 'border-gray-700 bg-gray-800 hover:border-amber-500' : 'border-gray-200 bg-white hover:border-amber-300'">
               <div class="flex items-center">
-                <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center group-hover:bg-amber-200">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-colors duration-300" :class="isDarkMode ? 'bg-amber-900 text-amber-300 group-hover:bg-amber-800' : 'bg-amber-100 text-amber-600 group-hover:bg-amber-200'">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                   </svg>
                 </div>
                 <div class="ml-4">
-                  <p class="text-sm text-gray-600">Pantau</p>
-                  <p class="text-base font-semibold text-gray-900">Pesanan</p>
+                  <p class="text-sm transition-colors duration-300" :class="isDarkMode ? 'text-gray-400' : 'text-gray-600'">Pantau</p>
+                  <p class="text-base font-semibold transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Pesanan</p>
                 </div>
               </div>
             </a>
           </div>
         </section>
         
-        <ProductManagement v-else-if="currentPage === 'products'" />
-        <CategoryManagement v-else-if="currentPage === 'categories'" />
-        <OrderManagement v-else-if="currentPage === 'orders'" />
+        <ProductManagement v-else-if="currentPage === 'products'" :is-dark-mode="isDarkMode" />
+        <CategoryManagement v-else-if="currentPage === 'categories'" :is-dark-mode="isDarkMode" />
+        <OrderManagement v-else-if="currentPage === 'orders'" :is-dark-mode="isDarkMode" />
         <UserManagement v-else-if="currentPage === 'users'" />
         <RoleManagement v-else-if="currentPage === 'roles'" />
         <div v-else-if="currentPage === 'members'" class="space-y-6">
@@ -201,7 +203,7 @@
         </div>
         <div v-else-if="currentPage === 'pos'" id="pos-app"></div>
       </main>
-      <AdminFooter />
+      <AdminFooter :is-dark-mode="isDarkMode" />
     </div>
 
     <!-- Overlay for mobile -->
@@ -232,6 +234,7 @@ export default {
       sidebarOpen: true,
       currentPageTitle: 'Dashboard',
       currentPage: 'dashboard',
+      isDarkMode: false,
       stats: {
         total_products: 0,
         total_categories: 0,
@@ -253,6 +256,7 @@ export default {
     this.handleHashNavigation();
     this.loadStats();
     this.loadChartData();
+    this.loadDarkModePreference();
     
     // Listen for custom page change events
     window.addEventListener('admin-page-change', (event) => {
@@ -433,7 +437,7 @@ export default {
             fill: true,
             tension: 0.4,
             pointBackgroundColor: '#3B82F6',
-            pointBorderColor: '#ffffff',
+            pointBorderColor: this.isDarkMode ? '#1f2937' : '#ffffff',
             pointBorderWidth: 2,
             pointRadius: 6,
             pointHoverRadius: 8
@@ -451,9 +455,10 @@ export default {
             y: {
               beginAtZero: true,
               grid: {
-                color: 'rgba(0, 0, 0, 0.05)'
+                color: this.isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
               },
               ticks: {
+                color: this.isDarkMode ? '#d1d5db' : '#374151',
                 callback: function(value) {
                   return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
                 }
@@ -462,6 +467,9 @@ export default {
             x: {
               grid: {
                 display: false
+              },
+              ticks: {
+                color: this.isDarkMode ? '#d1d5db' : '#374151'
               }
             }
           }
@@ -509,12 +517,18 @@ export default {
             y: {
               beginAtZero: true,
               grid: {
-                color: 'rgba(0, 0, 0, 0.05)'
+                color: this.isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+              },
+              ticks: {
+                color: this.isDarkMode ? '#d1d5db' : '#374151'
               }
             },
             x: {
               grid: {
                 display: false
+              },
+              ticks: {
+                color: this.isDarkMode ? '#d1d5db' : '#374151'
               }
             }
           }
@@ -557,7 +571,8 @@ export default {
               labels: {
                 padding: 20,
                 usePointStyle: true,
-                pointStyle: 'circle'
+                pointStyle: 'circle',
+                color: this.isDarkMode ? '#d1d5db' : '#374151'
               }
             }
           }
@@ -591,6 +606,20 @@ export default {
         document.body.appendChild(form);
         form.submit();
       }
+    },
+    
+    loadDarkModePreference() {
+      const saved = localStorage.getItem('darkMode');
+      this.isDarkMode = saved === 'true';
+    },
+    
+    toggleDarkMode() {
+      this.isDarkMode = !this.isDarkMode;
+      localStorage.setItem('darkMode', this.isDarkMode);
+      // Recreate charts with new colors
+      this.$nextTick(() => {
+        this.initCharts();
+      });
     }
   }
 }

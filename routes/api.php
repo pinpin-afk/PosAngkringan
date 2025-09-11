@@ -5,7 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\Api\SyncController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -50,13 +52,22 @@ Route::prefix('pos')->middleware('web')->group(function () {
 
     // Orders
     Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/report', [OrderController::class, 'report']);
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);
     Route::put('/orders/{order}', [OrderController::class, 'update']);
+    Route::post('/orders/{order}/verify-transfer', [OrderController::class, 'verifyTransfer']);
 
     Route::get('/orders/{order}/status', [OrderController::class, 'checkStatus']);
     // Generic Midtrans charge
     Route::post('/orders/charge', [OrderController::class, 'charge']);
+
+});
+
+// Offline sync endpoints
+Route::prefix('sync')->group(function () {
+    Route::get('/master', [SyncController::class, 'getMasterUpdates']);
+    Route::post('/orders', [SyncController::class, 'pushOfflineOrders']);
 });
 
 // Admin API Routes for Member Management
@@ -73,3 +84,6 @@ Route::prefix('admin')->group(function () {
 
 // Xendit Webhook (no auth)
 Route::post('/xendit/webhook', \App\Http\Controllers\XenditWebhookController::class);
+
+// Telegram webhook for semi-automatic transfer verification (no CSRF)
+Route::post('/pos/payments/telegram-webhook/{secret}', [PaymentWebhookController::class, 'telegram']);

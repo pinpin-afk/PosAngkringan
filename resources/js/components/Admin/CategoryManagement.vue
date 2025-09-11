@@ -20,10 +20,10 @@
     </div>
 
     <!-- Search and Filter -->
-    <div class="bg-white shadow-xl rounded-lg p-6">
+    <div class="shadow-xl rounded-lg p-6 transition-colors duration-300" :class="isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
+          <label class="block text-sm font-semibold mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-gray-300' : 'text-gray-700'">
             <div class="flex items-center space-x-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -35,11 +35,11 @@
             v-model="searchQuery" 
             type="text" 
             placeholder="Nama kategori, deskripsi..." 
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-150"
+            class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-150" :class="isDarkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'"
           >
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
+          <label class="block text-sm font-semibold mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-gray-300' : 'text-gray-700'">
             <div class="flex items-center space-x-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -49,7 +49,7 @@
           </label>
           <select 
             v-model="statusFilter" 
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-150"
+            class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-150" :class="isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'"
           >
             <option value="">Semua Status</option>
             <option value="active">Aktif</option>
@@ -57,7 +57,7 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
+          <label class="block text-sm font-semibold mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-gray-300' : 'text-gray-700'">
             <div class="flex items-center space-x-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"></path>
@@ -67,7 +67,7 @@
           </label>
           <select 
             v-model="sortBy" 
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-150"
+            class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-150" :class="isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'"
           >
             <option value="name">Nama A-Z</option>
             <option value="name_desc">Nama Z-A</option>
@@ -79,17 +79,17 @@
     </div>
 
     <!-- Categories Table -->
-    <div class="bg-white shadow-xl rounded-lg overflow-hidden">
-      <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+    <div class="shadow-xl rounded-lg overflow-hidden transition-colors duration-300" :class="isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'">
+      <div class="px-6 py-4 border-b transition-colors duration-300" :class="isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'">
         <div class="flex justify-between items-center">
           <div>
-            <h3 class="text-lg font-semibold text-gray-900">Daftar Kategori</h3>
-            <p class="text-sm text-gray-600">Menampilkan {{ filteredCategories.length }} dari {{ categories.length }} kategori</p>
+            <h3 class="text-lg font-semibold transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Daftar Kategori</h3>
+            <p class="text-sm transition-colors duration-300" :class="isDarkMode ? 'text-gray-300' : 'text-gray-600'">Menampilkan {{ filteredCategories.length }} dari {{ categories.length }} kategori</p>
           </div>
           <div class="flex items-center space-x-2">
             <button 
               @click="refreshData"
-              class="text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-150"
+              class="p-2 rounded-lg transition-colors duration-150" :class="isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'"
               title="Refresh Data"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,7 +98,7 @@
             </button>
             <button 
               @click="exportData"
-              class="text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-150"
+              class="p-2 rounded-lg transition-colors duration-150" :class="isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'"
               title="Export Data"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -367,6 +367,9 @@
 <script>
 export default {
   name: 'CategoryManagement',
+  props: {
+    isDarkMode: { type: Boolean, default: false }
+  },
   data() {
     return {
       categories: [],

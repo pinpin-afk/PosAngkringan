@@ -137,8 +137,14 @@
             <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
               <div v-for="product in filteredProducts" :key="product.id" @click="addToCart(product)" class="group rounded-2xl border transition-all duration-300 cursor-pointer transform hover:-translate-y-1" :class="isDarkMode ? 'border-gray-600 hover:border-gray-500 bg-gray-700 hover:bg-gray-600 hover:shadow-xl' : 'border-gray-200 hover:border-gray-300 bg-gray-50 hover:bg-white hover:shadow-xl'">
                 <div class="p-5">
-                  <div class="w-full h-28 rounded-xl flex items-center justify-center mb-4 transition-all duration-300" :class="isDarkMode ? 'bg-gray-600 group-hover:bg-gray-500' : 'bg-gray-200 group-hover:bg-gray-100'">
-                    <span class="font-bold text-2xl transition-colors duration-300" :class="isDarkMode ? 'text-white group-hover:text-gray-200' : 'text-gray-700 group-hover:text-gray-800'">{{ product.name.charAt(0).toUpperCase() }}</span>
+                  <div class="w-full h-28 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 overflow-hidden" :class="isDarkMode ? 'bg-gray-600 group-hover:bg-gray-500' : 'bg-gray-200 group-hover:bg-gray-100'">
+                    <img 
+                      v-if="product.image_url" 
+                      :src="product.image_url" 
+                      :alt="product.name"
+                      class="w-full h-full object-cover rounded-xl"
+                    >
+                    <span v-else class="font-bold text-2xl transition-colors duration-300" :class="isDarkMode ? 'text-white group-hover:text-gray-200' : 'text-gray-700 group-hover:text-gray-800'">{{ product.name.charAt(0).toUpperCase() }}</span>
                   </div>
                   <h3 class="font-bold text-sm truncate mb-1 transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">{{ product.name }}</h3>
                   <p class="text-xs truncate mb-3 transition-colors duration-300" :class="isDarkMode ? 'text-gray-400' : 'text-gray-500'">{{ product.description }}</p>

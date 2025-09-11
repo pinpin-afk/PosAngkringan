@@ -18,8 +18,13 @@ class Order extends Model
         'tax',
         'discount',
         'total',
+        'unique_code',
+        'transfer_amount',
         'payment_method',
         'payment_type',
+        'payment_status',
+        'transfer_verified_at',
+        'transfer_notes',
         'status',
         'notes'
     ];
@@ -39,5 +44,35 @@ class Order extends Model
     public function getFormattedTotalAttribute()
     {
         return 'Rp ' . number_format($this->total, 0, ',', '.');
+    }
+
+    public function getFormattedTransferAmountAttribute()
+    {
+        if ($this->transfer_amount) {
+            return 'Rp ' . number_format($this->transfer_amount, 0, ',', '.');
+        }
+        return null;
+    }
+
+    public function getPaymentStatusLabelAttribute()
+    {
+        return match($this->payment_status) {
+            'pending' => 'Menunggu Verifikasi',
+            'verified' => 'Transfer Terverifikasi',
+            'paid' => 'Lunas',
+            'failed' => 'Gagal',
+            default => 'Unknown'
+        };
+    }
+
+    public function getPaymentStatusColorAttribute()
+    {
+        return match($this->payment_status) {
+            'pending' => 'yellow',
+            'verified' => 'blue',
+            'paid' => 'green',
+            'failed' => 'red',
+            default => 'gray'
+        };
     }
 }

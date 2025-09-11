@@ -160,6 +160,35 @@
                 </div>
               </div>
 
+              <!-- Transfer Payment -->
+              <div
+                @click="selectPaymentMethod('transfer')"
+                class="p-4 rounded-lg border-2 cursor-pointer transition-all duration-200" :class="[
+                  paymentMethod === 'transfer' 
+                    ? (isDarkMode ? 'border-blue-400 bg-blue-900/20' : 'border-blue-500 bg-blue-50')
+                    : (isDarkMode ? 'border-gray-600 hover:border-gray-500' : 'border-gray-300 hover:border-gray-400')
+                ]"
+              >
+                <div class="flex items-center space-x-3">
+                  <div class="w-12 h-12 rounded-lg flex items-center justify-center" :class="isDarkMode ? 'bg-gray-700' : 'bg-gray-100'">
+                    <svg class="w-6 h-6" :class="isDarkMode ? 'text-gray-300' : 'text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                    </svg>
+                  </div>
+                  <div class="flex-1">
+                    <h4 class="font-medium transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Transfer Bank</h4>
+                    <p class="text-sm transition-colors duration-300" :class="isDarkMode ? 'text-gray-400' : 'text-gray-500'">Bayar dengan transfer bank (akan diverifikasi admin)</p>
+                  </div>
+                  <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center" :class="[
+                    paymentMethod === 'transfer' 
+                      ? (isDarkMode ? 'border-blue-400 bg-blue-400' : 'border-blue-500 bg-blue-500')
+                      : (isDarkMode ? 'border-gray-600' : 'border-gray-300')
+                  ]">
+                    <div v-if="paymentMethod === 'transfer'" class="w-2 h-2 rounded-full bg-white"></div>
+                  </div>
+                </div>
+              </div>
+
               <!-- Credit Card Payment -->
               <div
                 @click="selectPaymentMethod('credit_card')"
@@ -172,7 +201,7 @@
                 <div class="flex items-center space-x-3">
                   <div class="w-12 h-12 rounded-lg flex items-center justify-center" :class="isDarkMode ? 'bg-gray-700' : 'bg-gray-100'">
                     <svg class="w-6 h-6" :class="isDarkMode ? 'text-gray-300' : 'text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a2 2 0 002 2z"></path>
                     </svg>
                   </div>
                   <div class="flex-1">
@@ -348,7 +377,12 @@
               <strong>Total:</strong> Rp {{ formatPrice(successData?.total || 0) }}
             </div>
             <div class="text-sm transition-colors duration-300" :class="isDarkMode ? 'text-gray-300' : 'text-gray-600'">
-              <strong>Metode:</strong> {{ successData?.paymentMethod === 'cash' ? 'Tunai' : successData?.paymentMethod === 'qris' ? 'QRIS' : successData?.paymentMethod === 'debit' ? 'Debit' : 'Kredit' }}
+              <strong>Metode:</strong> {{ 
+                successData?.paymentMethod === 'cash' ? 'Tunai' : 
+                successData?.paymentMethod === 'qris' ? 'QRIS' : 
+                successData?.paymentMethod === 'transfer' ? 'Transfer Bank' :
+                successData?.paymentMethod === 'debit' ? 'Debit' : 'Kredit' 
+              }}
             </div>
             
             <!-- Cash Payment Details -->
@@ -401,17 +435,26 @@
           <h3 class="text-lg font-semibold text-gray-900 mb-4">Pembayaran QRIS</h3>
           <p class="text-sm text-gray-600 mb-4">Scan QR code dengan aplikasi e-wallet Anda</p>
           
-          <!-- QR Code Placeholder -->
-          <div class="w-48 h-48 bg-gray-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
-            <div class="text-center">
-              <div class="w-32 h-32 bg-gray-300 rounded-lg mx-auto mb-2"></div>
-              <p class="text-xs text-gray-500">QR Code akan muncul di sini</p>
-            </div>
+          <!-- QR Code Display -->
+          <div class="w-56 h-56 bg-gray-50 rounded-lg mx-auto mb-4 flex items-center justify-center">
+            <img v-if="qrisQrUrl" :src="qrisQrUrl" alt="QRIS" class="w-52 h-52 object-contain" />
+            <canvas v-else ref="qrisCanvas" class="w-52 h-52"></canvas>
           </div>
 
           <div class="space-y-2">
             <p class="text-sm font-medium">Total: Rp {{ formatPrice(total) }}</p>
             <p class="text-xs text-gray-500">Order ID: {{ qrisOrderId }}</p>
+            <div class="mt-3 p-3 rounded-lg bg-yellow-50 border border-yellow-200">
+              <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div>
+                  <p class="text-sm font-medium text-yellow-800">Menunggu Pembayaran</p>
+                  <p class="text-xs text-yellow-600">Transfer akan diverifikasi oleh admin</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="flex space-x-3 mt-6">
@@ -431,11 +474,75 @@
         </div>
       </div>
     </div>
+
+    <!-- Transfer Modal -->
+    <div v-if="showTransferModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg p-6 max-w-md w-full">
+        <div class="text-center">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Pembayaran Transfer Bank</h3>
+          <p class="text-sm text-gray-600 mb-6">Transfer ke rekening berikut dan konfirmasi ke admin</p>
+          
+          <!-- Bank Info -->
+          <div class="bg-gray-50 rounded-lg p-4 mb-6">
+            <div class="space-y-3">
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-medium text-gray-600">Bank:</span>
+                <span class="text-sm font-semibold text-gray-900">BCA</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-medium text-gray-600">No. Rekening:</span>
+                <span class="text-sm font-semibold text-gray-900">1234567890</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-medium text-gray-600">Atas Nama:</span>
+                <span class="text-sm font-semibold text-gray-900">POS Angkringan</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-medium text-gray-600">Total Transfer:</span>
+                <span class="text-lg font-bold text-blue-600">Rp {{ formatPrice(total) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Info -->
+          <div class="space-y-2 mb-6">
+            <p class="text-sm font-medium">Order ID: {{ transferOrderId }}</p>
+            <div class="mt-3 p-3 rounded-lg bg-yellow-50 border border-yellow-200">
+              <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div>
+                  <p class="text-sm font-medium text-yellow-800">Menunggu Verifikasi</p>
+                  <p class="text-xs text-yellow-600">Admin akan memverifikasi transfer Anda</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex space-x-3">
+            <button
+              @click="cancelTransferPayment"
+              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Batal
+            </button>
+            <button
+              @click="confirmTransferPayment"
+              class="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Konfirmasi
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
+import QRCode from 'qrcode';
 
 export default {
   name: 'PaymentView',
@@ -464,7 +571,10 @@ export default {
       qrisQrString: null,
       qrisQrUrl: null,
       qrisPollTimer: null,
-      deeplinkUrl: null
+      deeplinkUrl: null,
+      // Transfer state
+      showTransferModal: false,
+      transferOrderId: null
     }
   },
   computed: {
@@ -580,6 +690,13 @@ export default {
           axios.put(`/api/pos/orders/${draftId}`, { status: 'cancelled' }).catch(() => {});
           localStorage.removeItem('pos_draft_order_id');
         }
+      } else if (method === 'transfer') {
+        // If a cash draft exists, cancel it before proceeding with Transfer
+        const draftId = localStorage.getItem('pos_draft_order_id');
+        if (draftId) {
+          axios.put(`/api/pos/orders/${draftId}`, { status: 'cancelled' }).catch(() => {});
+          localStorage.removeItem('pos_draft_order_id');
+        }
       }
     },
     formatPrice(price) {
@@ -644,7 +761,24 @@ export default {
           this.qrisQrUrl = data.qr_url || null;
           this.deeplinkUrl = data.deeplink_url || null;
           this.showQrisModal = true;
+          this.$nextTick(() => { this.renderQris(); });
           this.startQrisPolling();
+        } else if (this.paymentMethod === 'transfer') {
+          // Create transfer order with pending status
+          const res = await axios.post('/api/pos/orders', { 
+            ...orderData, 
+            payment_method: 'transfer',
+            payment_type: 'transfer'
+          });
+          const data = res.data || {};
+          const orderId = data.order_id || 
+                         data.id || 
+                         data.order?.id ||
+                         `TRF-${Date.now()}`;
+          
+          // Show transfer info modal
+          this.showTransferModal = true;
+          this.transferOrderId = orderId;
         } else {
           // If draft order exists for cash, complete it; otherwise create new
           const draftId = localStorage.getItem('pos_draft_order_id');
@@ -737,6 +871,13 @@ export default {
         }
       }, 3000);
     },
+    async renderQris() {
+      try {
+        if (!this.qrisQrUrl && this.qrisQrString && this.$refs.qrisCanvas) {
+          await QRCode.toCanvas(this.$refs.qrisCanvas, this.qrisQrString, { width: 208, margin: 1 });
+        }
+      } catch (_) {}
+    },
     stopQrisPolling() {
       if (this.qrisPollTimer) {
         clearInterval(this.qrisPollTimer);
@@ -751,6 +892,41 @@ export default {
           await axios.put(`/api/pos/orders/${this.qrisOrderId}`, { status: 'cancelled' });
         }
       } catch (_) {}
+    },
+    async cancelTransferPayment() {
+      this.showTransferModal = false;
+      try {
+        if (this.transferOrderId) {
+          await axios.put(`/api/pos/orders/${this.transferOrderId}`, { status: 'cancelled' });
+        }
+      } catch (_) {}
+    },
+    async confirmTransferPayment() {
+      this.showTransferModal = false;
+      
+      // Show success modal with transfer details
+      this.successData = {
+        orderId: this.transferOrderId,
+        total: this.total,
+        paymentMethod: 'transfer',
+        cashAmount: null,
+        changeAmount: null,
+        items: this.cart,
+        customerName: this.customerName,
+        customerPhone: this.customerPhone,
+        tableNumber: this.tableNumber,
+        selectedMember: this.selectedMember,
+        pointsEarned: this.pointsEarned,
+        processedBy: this.processedBy,
+        timestamp: new Date().toLocaleString('id-ID')
+      };
+      
+      this.showSuccessModal = true;
+      
+      // Auto print receipt after a short delay
+      setTimeout(() => {
+        this.printReceipt();
+      }, 1000);
     },
     async checkPaymentStatus() {
       try {
@@ -948,7 +1124,7 @@ export default {
             <div class="cash-details">
               <div class="cash-line">
                 <span>Metode:</span>
-                <span>${paymentMethod === 'qris' ? 'QRIS' : paymentMethod === 'debit' ? 'Debit' : 'Kredit'}</span>
+                <span>${paymentMethod === 'qris' ? 'QRIS' : paymentMethod === 'transfer' ? 'Transfer Bank' : paymentMethod === 'debit' ? 'Debit' : 'Kredit'}</span>
               </div>
             </div>
           `}
