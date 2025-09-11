@@ -9,6 +9,7 @@ RUN composer install --no-dev --prefer-dist --optimize-autoloader
 
 RUN apk add --no-cache nodejs npm
 RUN npm install
+RUN npm install qrcode
 RUN npm run build
 
 FROM php:8.2-apache
