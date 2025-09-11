@@ -20,10 +20,11 @@ import UserManagement from './components/Admin/UserManagement.vue';
 import MemberManagement from './components/Admin/MemberManagement.vue';
 import RoleManagement from './components/Admin/RoleManagement.vue';
 import PosOrderReport from './components/PosOrderReport.vue';
-import { setupNetworkWatcher } from './offline/sync';
+// import { setupNetworkWatcher } from './offline/sync';
 
-setupNetworkWatcher();
+// setupNetworkWatcher();
 
+//if push comment this
 // try {
 //   import('@capacitor/app').then(({ App }) => {
 //     App.addListener('backButton', ({ canGoBack }) => {
@@ -37,6 +38,7 @@ setupNetworkWatcher();
 //     window.addEventListener('popstate', () => {});
 //   });
 // } catch (_) {}
+////
 
 if (document.getElementById('admin-login-app')) {
     createApp(AdminLogin).mount('#admin-login-app');
@@ -103,8 +105,8 @@ if (document.getElementById('admin-login-app')) {
     }
 }
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  });
-}
+// if ('serviceWorker' in navigator) {
+//   window.addEventListener('load', () => {
+//     navigator.serviceWorker.register('/sw.js').catch(() => {});
+//   });
+// }
