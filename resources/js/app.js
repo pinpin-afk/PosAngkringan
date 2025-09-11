@@ -24,19 +24,19 @@ import { setupNetworkWatcher } from './offline/sync';
 
 setupNetworkWatcher();
 
-try {
-  import('@capacitor/app').then(({ App }) => {
-    App.addListener('backButton', ({ canGoBack }) => {
-      const atRoot = window.location.pathname === '/' || window.location.pathname === '/kasir/pos';
-      if (!atRoot && (canGoBack || window.history.length > 1)) {
-        window.history.back();
-      } else {
-      }
-    });
-  }).catch(() => {
-    window.addEventListener('popstate', () => {});
-  });
-} catch (_) {}
+// try {
+//   import('@capacitor/app').then(({ App }) => {
+//     App.addListener('backButton', ({ canGoBack }) => {
+//       const atRoot = window.location.pathname === '/' || window.location.pathname === '/kasir/pos';
+//       if (!atRoot && (canGoBack || window.history.length > 1)) {
+//         window.history.back();
+//       } else {
+//       }
+//     });
+//   }).catch(() => {
+//     window.addEventListener('popstate', () => {});
+//   });
+// } catch (_) {}
 
 if (document.getElementById('admin-login-app')) {
     createApp(AdminLogin).mount('#admin-login-app');
