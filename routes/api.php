@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\MidtransController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\Api\SyncController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\RoleController;
 
 // ============================================================================
 // PUBLIC API ROUTES (No Authentication Required)
@@ -131,6 +132,14 @@ Route::prefix('admin')->middleware(['web', 'auth:admin'])->group(function () {
     Route::get('/users/{user}', [UserController::class, 'show']);
     Route::put('/users/{user}', [UserController::class, 'update']);
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
+
+    // Roles Management (Admin can view and manage roles)
+    Route::get('/roles', [RoleController::class, 'index']);
+    Route::post('/roles', [RoleController::class, 'store']);
+    Route::get('/roles/{role}', [RoleController::class, 'show']);
+    Route::put('/roles/{role}', [RoleController::class, 'update']);
+    Route::delete('/roles/{role}', [RoleController::class, 'destroy']);
+    Route::get('/role-stats', [RoleController::class, 'getStats']);
 });
 
 // ============================================================================

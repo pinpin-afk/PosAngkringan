@@ -296,7 +296,7 @@ export default {
   methods: {
     async loadRoles() {
       try {
-        const response = await fetch('/pos/roles');
+        const response = await fetch('/api/admin/roles');
         this.roles = await response.json();
       } catch (error) {
         console.error('Error loading roles:', error);
@@ -305,7 +305,7 @@ export default {
     
     async loadRoleStats() {
       try {
-        const response = await fetch('/pos/role-stats');
+        const response = await fetch('/api/admin/role-stats');
         this.roleStats = await response.json();
       } catch (error) {
         console.error('Error loading role stats:', error);
@@ -316,7 +316,7 @@ export default {
       this.loading = true;
       
       try {
-        const response = await fetch('/pos/roles', {
+        const response = await fetch('/api/admin/roles', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

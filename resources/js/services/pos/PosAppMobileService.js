@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 /**
- * Service class for PosAppISeller API calls
+ * Service class for PosAppMobile API calls
  */
-class PosAppISellerService {
+class PosAppMobileService {
   /**
    * Load products from API
    */
@@ -59,42 +59,6 @@ class PosAppISellerService {
   }
 
   /**
-   * Add new member
-   */
-  static async addMember(memberData) {
-    try {
-      await axios.post('/api/kasir/members', memberData);
-    } catch (error) {
-      const msg = error?.response?.data?.message || error?.message || 'Gagal menambah member';
-      throw new Error(msg);
-    }
-  }
-
-  /**
-   * Update member
-   */
-  static async updateMember(memberId, memberData) {
-    try {
-      await axios.put(`/api/kasir/members/${memberId}`, memberData);
-    } catch (error) {
-      const msg = error?.response?.data?.message || error?.message || 'Gagal mengupdate member';
-      throw new Error(msg);
-    }
-  }
-
-  /**
-   * Delete member
-   */
-  static async deleteMember(memberId) {
-    try {
-      await axios.delete(`/api/kasir/members/${memberId}`);
-    } catch (error) {
-      const msg = error?.response?.data?.message || error?.message || 'Gagal menghapus member';
-      throw new Error(msg);
-    }
-  }
-
-  /**
    * Load draft orders
    */
   static async loadDraftOrders() {
@@ -102,7 +66,6 @@ class PosAppISellerService {
       const response = await axios.get('/api/kasir/orders/drafts');
       return response.data || [];
     } catch (error) {
-      console.error('Error loading draft orders:', error);
       return [];
     }
   }
@@ -131,4 +94,4 @@ class PosAppISellerService {
   }
 }
 
-export default PosAppISellerService;
+export default PosAppMobileService;

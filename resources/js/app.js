@@ -1,8 +1,8 @@
 import './bootstrap';
 import '../css/app.css';
 import { createApp } from 'vue';
-import PosAppMobile from './components/PosAppMobile.vue';
-import PosAppTablet from './components/PosAppTablet.vue';
+import PosAppMobile from './components/Kasir/Pos/PosAppMobile.vue';
+import PosAppTablet from './components/Kasir/Pos/PosAppTablet.vue';
 import PosAppISeller from './components/Kasir/Pos/PosAppISeller.vue';
 import PaymentView from './components/Kasir/Payment/PaymentView.vue';
 import PosMemberManagement from './components/PosMemberManagement.vue';

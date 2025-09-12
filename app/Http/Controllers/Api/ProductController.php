@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -37,13 +39,15 @@ class ProductController extends Controller
                 'is_active' => 'boolean',
             ]);
 
-            $data = $request->all();
-            
-            // Handle image upload - save as base64
+            $data = $request->only(['name','description','price','stock','category_id','is_active']);
+
+            // Handle image upload to storage (public disk)
             if ($request->hasFile('image')) {
-                $image = $request->file('image');
-                $imageData = base64_encode(file_get_contents($image->getRealPath()));
-                $data['image'] = 'data:' . $image->getMimeType() . ';base64,' . $imageData;
+                $path = $request->file('image')->store('products', 'public');
+                $data['image_path'] = $path; // store relative path like products/xxx.jpg
+            } elseif (is_string($request->input('image')) && str_starts_with($request->input('image'), 'data:')) {
+                // Support base64 data URI uploads for backward compatibility
+                $data['image_path'] = $this->storeBase64Image($request->input('image'));
             }
 
             $product = Product::create($data);
@@ -75,17 +79,6 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         try {
-            \Log::info('Product update request:', [
-                'product_id' => $product->id,
-                'request_data' => $request->all(),
-                'has_image' => $request->hasFile('image'),
-                'image_file' => $request->hasFile('image') ? [
-                    'name' => $request->file('image')->getClientOriginalName(),
-                    'size' => $request->file('image')->getSize(),
-                    'mime' => $request->file('image')->getMimeType()
-                ] : null
-            ]);
-
             $request->validate([
                 'name' => 'required|string|max:255',
                 'description' => 'nullable|string',
@@ -96,53 +89,49 @@ class ProductController extends Controller
                 'is_active' => 'boolean',
             ]);
 
-            $data = $request->all();
-            
-            // Handle image upload - save as base64
+            $data = $request->only(['name','description','price','stock','category_id','is_active']);
+
+            // Handle image upload/removal to storage (public disk)
             if ($request->hasFile('image')) {
-                \Log::info('Processing image upload for product: ' . $product->id);
-                
-                $image = $request->file('image');
-                $imageData = base64_encode(file_get_contents($image->getRealPath()));
-                $data['image'] = 'data:' . $image->getMimeType() . ';base64,' . $imageData;
-                
-                \Log::info('Image converted to base64 successfully');
+                // Delete old stored file if exists and is a stored path
+                if ($product->image_path) {
+                    Storage::disk('public')->delete($product->image_path);
+                }
+                $path = $request->file('image')->store('products', 'public');
+                $data['image_path'] = $path;
+            } elseif ($request->boolean('remove_image')) {
+                // Explicit remove current image
+                if ($product->image_path) {
+                    Storage::disk('public')->delete($product->image_path);
+                }
+                $data['image_path'] = null;
+            } elseif (is_string($request->input('image')) && str_starts_with($request->input('image'), 'data:')) {
+                // If incoming still base64, migrate to storage
+                // Delete old stored file if exists (optional)
+                if ($product->image_path) {
+                    Storage::disk('public')->delete($product->image_path);
+                }
+                $data['image_path'] = $this->storeBase64Image($request->input('image'));
             }
 
-            \Log::info('Updating product with data:', $data);
             $product->update($data);
 
-            \Log::info('Product updated successfully: ' . $product->id);
 
             $productData = $product->load('category');
-            \Log::info('Product data being returned:', [
-                'id' => $productData->id,
-                'name' => $productData->name,
-                'image' => $productData->image,
-                'image_url' => $productData->image_url
-            ]);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Produk berhasil diperbarui',
                 'data' => $productData
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Validation failed for product update:', [
-                'product_id' => $product->id,
-                'errors' => $e->errors()
-            ]);
             
             return response()->json([
                 'success' => false,
                 'message' => 'Validasi gagal',
                 'errors' => $e->errors()
             ], 422);
-        } catch (\Exception $e) {
-            \Log::error('Error updating product: ' . $product->id, [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+        } catch (\Exception $e) {;
             
             return response()->json([
                 'success' => false,
@@ -153,7 +142,37 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        // Delete stored image file if exists and not base64
+        if ($product->image_path) {
+            Storage::disk('public')->delete($product->image_path);
+        }
         $product->delete();
         return response()->json(null, 204);
+    }
+
+    /**
+     * Store base64 data URI image to public storage and return relative path
+     */
+    private function storeBase64Image(string $dataUri): string
+    {
+        // data:image/png;base64,XXXX
+        if (!preg_match('/^data:(.*?);base64,(.*)$/', $dataUri, $matches)) {
+            throw new \InvalidArgumentException('Invalid base64 image data');
+        }
+        $mime = $matches[1] ?? 'application/octet-stream';
+        $base64 = $matches[2] ?? '';
+        $binary = base64_decode($base64);
+        if ($binary === false) {
+            throw new \InvalidArgumentException('Failed to decode base64 image');
+        }
+        $extension = match ($mime) {
+            'image/jpeg','image/jpg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            default => 'bin',
+        };
+        $filename = 'products/' . Str::uuid()->toString() . '.' . $extension;
+        Storage::disk('public')->put($filename, $binary);
+        return $filename;
     }
 }

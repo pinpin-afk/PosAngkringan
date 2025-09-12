@@ -7,7 +7,7 @@ RUN cp .env.example .env
 
 RUN composer install --no-dev --prefer-dist --optimize-autoloader
 
-RUN php artisan migrate
+RUN php artisan storage:link
 
 RUN composer require midtrans/midtrans-php
 

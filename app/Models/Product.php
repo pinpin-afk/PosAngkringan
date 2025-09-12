@@ -15,7 +15,7 @@ class Product extends Model
         'price',
         'stock',
         'category_id',
-        'image',
+        'image_path', // stores relative path like products/xxx.jpg
         'is_active'
     ];
 
@@ -28,17 +28,12 @@ class Product extends Model
 
     public function getImageUrlAttribute()
     {
-        if ($this->image) {
-            // Check if image is base64 data URI
-            if (str_starts_with($this->image, 'data:')) {
-                return $this->image;
+        if ($this->image_path) {
+            // Accept both starting with 'storage/' or relative 'products/...'
+            if (str_starts_with($this->image_path, 'storage/')) {
+                return asset($this->image_path);
             }
-            // Check if image path starts with 'storage/' or 'products/'
-            elseif (str_starts_with($this->image, 'storage/')) {
-                return asset($this->image);
-            } else {
-                return asset('storage/' . $this->image);
-            }
+            return asset('storage/' . $this->image_path);
         }
         return null;
     }
