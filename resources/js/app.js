@@ -1,11 +1,10 @@
 import './bootstrap';
 import '../css/app.css';
 import { createApp } from 'vue';
-import PosApp from './components/PosApp.vue';
 import PosAppMobile from './components/PosAppMobile.vue';
 import PosAppTablet from './components/PosAppTablet.vue';
-import PosAppISeller from './components/PosAppISeller.vue';
-import PaymentView from './components/PaymentView.vue';
+import PosAppISeller from './components/Kasir/Pos/PosAppISeller.vue';
+import PaymentView from './components/Kasir/Payment/PaymentView.vue';
 import PosMemberManagement from './components/PosMemberManagement.vue';
 import AdminDashboard from './components/Admin/AdminDashboard.vue';
 import OwnerDashboard from './components/Owner/OwnerDashboard.vue';

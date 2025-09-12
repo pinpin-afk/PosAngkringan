@@ -419,6 +419,13 @@
               </svg>
               <span class="text-xs">Member</span>
             </button>
+            <button @click="showDraftOrdersModal = true; loadDraftOrders(); showTopSheet = false" class="flex flex-col items-center justify-center px-3 py-3 rounded-lg"
+                    :class="isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'">
+              <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span class="text-xs">Draft</span>
+            </button>
             <button @click="logout(); showTopSheet = false" class="flex flex-col items-center justify-center px-3 py-3 rounded-lg"
                     :class="isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'">
               <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -430,13 +437,93 @@
         </div>
       </div>
     </transition>
+
+    <!-- Draft Orders Modal -->
+    <div v-if="showDraftOrdersModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">Draft Orders</h3>
+            <div class="flex space-x-2">
+              <button
+                @click="loadDraftOrders"
+                class="px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+              >
+                Refresh
+              </button>
+              <button
+                @click="showDraftOrdersModal = false"
+                class="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+          <div v-if="draftOrders.length === 0" class="text-center py-12">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-gray-100">
+              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+            </div>
+            <p class="text-gray-500">Tidak ada draft orders</p>
+          </div>
+          
+          <div v-else class="space-y-4">
+            <div 
+              v-for="draft in draftOrders" 
+              :key="draft.id"
+              class="p-4 rounded-lg border bg-gray-50 border-gray-200"
+            >
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center space-x-2 mb-2">
+                    <span class="text-sm font-medium text-gray-900">Order #{{ draft.order_number }}</span>
+                    <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
+                      {{ draft.status }}
+                    </span>
+                  </div>
+                  
+                  <div class="text-sm text-gray-600 space-y-1">
+                    <p v-if="draft.customer_name"><strong>Customer:</strong> {{ draft.customer_name }}</p>
+                    <p v-if="draft.customer_phone"><strong>Phone:</strong> {{ draft.customer_phone }}</p>
+                    <p><strong>Items:</strong> {{ draft.order_items?.length || 0 }} produk</p>
+                    <p><strong>Total:</strong> Rp {{ formatPrice(draft.total) }}</p>
+                    <p><strong>Created:</strong> {{ formatDateTime(draft.created_at) }}</p>
+                  </div>
+                </div>
+                
+                <div class="flex space-x-2 ml-4">
+                  <button
+                    @click="editDraft(draft); showDraftOrdersModal = false"
+                    class="px-3 py-1 text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    @click="deleteDraft(draft.id)"
+                    class="px-3 py-1 text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 transition-colors"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
-import Breadcrumb from './Breadcrumb.vue';
-import PosMemberManagement from './PosMemberManagement.vue';
+import PosAppISellerLogic from './PosAppISeller.js';
+import Breadcrumb from '../../Breadcrumb.vue';
+import PosMemberManagement from '../../PosMemberManagement.vue';
 
 export default {
   name: 'PosAppISeller',
@@ -444,421 +531,21 @@ export default {
     Breadcrumb,
     PosMemberManagement
   },
-  data() {
-    return {
-      products: [],
-      categories: [],
-      selectedCategory: '',
-      searchQuery: '',
-      cart: [],
-      customerName: '',
-      customerPhone: '',
-      tableNumber: '',
-      processedBy: '',
-      paymentMethod: 'cash',
-      user: window.user || null,
-      isDarkMode: false,
-      // QRIS state
-      showQrisModal: false,
-      qrisOrderId: null,
-      qrisQrString: null,
-      qrisQrUrl: null,
-      // Member management (reusable modal only)
-      showMemberCrudModal: false,
-      memberSearchQuery: '',
-      memberLoading: false,
-      members: [],
-      selectedMember: null,
-      qrisPollTimer: null,
-      deeplinkUrl: null,
-      showTopSheet: false
-    }
-  },
-  computed: {
-    filteredProducts() {
-      let filtered = this.products;
-      
-      // Filter by category
-      if (this.selectedCategory) {
-        filtered = filtered.filter(product => product.category_id == this.selectedCategory);
-      }
-      
-      // Filter by search query
-      if (this.searchQuery) {
-        const query = this.searchQuery.toLowerCase();
-        filtered = filtered.filter(product => 
-          product.name.toLowerCase().includes(query) || 
-          product.description.toLowerCase().includes(query)
-        );
-      }
-      
-      return filtered;
-    },
-    cartSubtotal() {
-      return this.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-    },
-    tax() {
-      return this.cartSubtotal * 0.1;
-    },
-    total() {
-      return this.cartSubtotal + this.tax;
-    },
-    pointsEarned() {
-      // 2% points for members
-      if (this.selectedMember) {
-        return Math.floor(this.cartSubtotal * 0.02);
-      }
-      return 0;
-    },
-    finalTotal() {
-      return this.total;
-    },
-    memberBreadcrumbs() {
-      return [
-        {
-          label: 'POS',
-          path: '#',
-          icon: 'svg'
-        },
-        {
-          label: 'Kelola Member',
-          path: '#'
-        }
-      ];
-    },
-    filteredMembers() {
-      if (!this.memberSearchQuery) return this.members;
-      
-      const query = this.memberSearchQuery.toLowerCase();
-      return this.members.filter(member => 
-        member.member_id.toLowerCase().includes(query) ||
-        member.name.toLowerCase().includes(query) ||
-        member.phone.toLowerCase().includes(query) ||
-        (member.email && member.email.toLowerCase().includes(query))
-      );
-    },
-    paymentTitle() {
-      const map = { qris: 'QRIS', gopay: 'GoPay', shopeepay: 'ShopeePay' };
-      return map[this.paymentMethod] || 'Pembayaran'
-    }
-  },
-  async mounted() {
-    await this.loadProducts();
-    await this.loadCategories();
-    await this.loadKasirName();
-    this.loadDarkModePreference();
-    this.loadDraftFromStorage();
-  },
-  watch: {},
-  methods: {
-    goToReport() {
-      window.location.href = '/kasir/report';
-    },
-    openMemberCrudModal() {
-      this.showMemberCrudModal = true;
-    },
-    handleMemberSelected(member) {
-      this.selectMember(member);
-      this.showMemberCrudModal = false;
-    },
-    async handleMemberCrudClosed() {
-      this.showMemberCrudModal = false;
-      await this.loadMembers();
-    },
-    loadDraftFromStorage() {
-      try {
-        const savedCart = localStorage.getItem('pos_cart');
-        if (savedCart) {
-          this.cart = JSON.parse(savedCart);
-        }
-        const savedCustomerName = localStorage.getItem('pos_customer_name');
-        const savedCustomerPhone = localStorage.getItem('pos_customer_phone');
-        const savedTableNumber = localStorage.getItem('pos_table_number');
-        const savedSelectedMember = localStorage.getItem('pos_selected_member');
-        if (savedCustomerName) this.customerName = savedCustomerName;
-        if (savedCustomerPhone) this.customerPhone = savedCustomerPhone;
-        if (savedTableNumber) this.tableNumber = savedTableNumber;
-        if (savedSelectedMember) {
-          try { this.selectedMember = JSON.parse(savedSelectedMember); } catch (_) {}
-        }
-      } catch (_) {}
-    },
-    async loadKasirName() {
-      try {
-        const res = await axios.get('/check-kasir-session');
-        const data = res?.data || {};
-        const user = data.user || data;
-        if (user && (user.name || user.username)) {
-          this.processedBy = user.name || user.username;
-        }
-      } catch (e) {
-        // ignore if not logged in as kasir
-      }
-    },
-    async loadProducts() {
-      try {
-        console.log('Loading products...');
-        const response = await axios.get('/pos/products');
-        console.log('Products response:', response.data);
-        this.products = response.data;
-      } catch (error) {
-        console.error('Error loading products:', error);
-        console.error('Error details:', error.response?.data);
-        alert('Error loading products: ' + (error.response?.data?.message || error.message));
-      }
-    },
-    async loadCategories() {
-      try {
-        console.log('Loading categories...');
-        const response = await axios.get('/pos/categories');
-        console.log('Categories response:', response.data);
-        this.categories = response.data;
-      } catch (error) {
-        console.error('Error loading categories:', error);
-        console.error('Error details:', error.response?.data);
-        alert('Error loading categories: ' + (error.response?.data?.message || error.message));
-      }
-    },
-    filterProducts() {
-      // Products are filtered in computed property
-    },
-    addToCart(product) {
-      if (product.stock <= 0) {
-        alert('Stok produk habis!');
-        return;
-      }
-
-      const existingItem = this.cart.find(item => item.id === product.id);
-      if (existingItem) {
-        if (existingItem.quantity >= product.stock) {
-          alert('Stok tidak mencukupi!');
-          return;
-        }
-        existingItem.quantity += 1;
-      } else {
-        this.cart.push({
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          quantity: 1,
-          stock: product.stock
-        });
-      }
-    },
-    updateQuantity(index, newQuantity) {
-      if (newQuantity <= 0) {
-        this.removeFromCart(index);
-        return;
-      }
-      
-      const item = this.cart[index];
-      if (newQuantity > item.stock) {
-        alert('Stok tidak mencukupi!');
-        return;
-      }
-      
-      this.cart[index].quantity = newQuantity;
-    },
-    removeFromCart(index) {
-      this.cart.splice(index, 1);
-    },
-    clearCart() {
-      this.cart = [];
-    },
-    formatPrice(price) {
-      return new Intl.NumberFormat('id-ID').format(price);
-    },
-    toggleDarkMode() {
-      this.isDarkMode = !this.isDarkMode;
-      localStorage.setItem('darkMode', this.isDarkMode);
-    },
-    loadDarkModePreference() {
-      const saved = localStorage.getItem('darkMode');
-      this.isDarkMode = saved === 'true';
-    },
-    logout() {
-      if (confirm('Yakin ingin logout?')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = window.logoutUrl;
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = '_token';
-        csrfInput.value = window.csrfToken;
-        form.appendChild(csrfInput);
-        document.body.appendChild(form);
-        form.submit();
-      }
-    },
-    async loadMembers() {
-      this.memberLoading = true;
-      try {
-        const response = await axios.get('/pos/members/api');
-        this.members = response.data || [];
-      } catch (error) {
-        console.error('Error loading members:', error);
-        alert('Gagal memuat data member: ' + (error.response?.data?.message || error.message));
-      } finally {
-        this.memberLoading = false;
-      }
-    },
-    selectMember(member) {
-      this.selectedMember = member;
-      // Update customer info with member data
-      this.customerName = member.name;
-      this.customerPhone = member.phone;
-    },
-    unselectMember() {
-      this.selectedMember = null;
-      // Customer info will be hidden automatically when no member selected
-    },
-    async addMemberFlow() {
-      try {
-        const name = prompt('Nama member:');
-        if (!name) return;
-        const phone = prompt('Nomor telepon:');
-        if (!phone) return;
-        const email = prompt('Email (opsional):') || '';
-        const address = prompt('Alamat (opsional):') || '';
-        await axios.post('/pos/members/api', {
-          name,
-          phone,
-          email,
-          address,
-          is_active: true,
-          points: 0
-        });
-        alert('Member berhasil ditambahkan');
-        await this.loadMembers();
-      } catch (error) {
-        const msg = error?.response?.data?.message || error?.message || 'Gagal menambah member';
-        alert(msg);
-      }
-    },
-    async editMember(member) {
-      try {
-        const name = prompt('Nama member:', member.name);
-        if (!name) return;
-        const phone = prompt('Nomor telepon:', member.phone);
-        if (!phone) return;
-        const email = prompt('Email (opsional):', member.email || '') || '';
-        const address = prompt('Alamat (opsional):', member.address || '') || '';
-        const isActive = confirm('Set member AKTIF? (OK = Aktif, Cancel = Tidak Aktif)');
-        const pointsInput = prompt('Points:', String(member.points ?? 0));
-        const points = Math.max(0, parseInt(pointsInput || '0', 10) || 0);
-        await axios.put(`/pos/members/api/${member.id}`, {
-          name,
-          phone,
-          email,
-          address,
-          is_active: isActive,
-          points
-        });
-        alert('Member berhasil diupdate');
-        await this.loadMembers();
-      } catch (error) {
-        const msg = error?.response?.data?.message || error?.message || 'Gagal mengupdate member';
-        alert(msg);
-      }
-    },
-    async deleteMember(member) {
-      try {
-        if (!confirm(`Yakin ingin menghapus member ${member.name}?`)) return;
-        await axios.delete(`/pos/members/api/${member.id}`);
-        alert('Member berhasil dihapus');
-        await this.loadMembers();
-      } catch (error) {
-        const msg = error?.response?.data?.message || error?.message || 'Gagal menghapus member';
-        alert(msg);
-      }
-    },
-    handleBreadcrumbNavigate(path) {
-      if (path === '#') {
-        this.showMemberManagement = false;
-      }
-    },
-    goToPayment() {
-      if (this.cart.length === 0) {
-        alert('Keranjang kosong!');
-        return;
-      }
-
-      // Save cart and customer data to localStorage
-      localStorage.setItem('pos_cart', JSON.stringify(this.cart));
-      localStorage.setItem('pos_customer_name', this.customerName);
-      localStorage.setItem('pos_customer_phone', this.customerPhone);
-      localStorage.setItem('pos_table_number', this.tableNumber);
-      localStorage.setItem('pos_selected_member', JSON.stringify(this.selectedMember));
-      localStorage.setItem('pos_points_earned', this.pointsEarned);
-      localStorage.setItem('pos_final_total', this.finalTotal);
-
-      // Redirect to payment page
-      window.location.href = '/kasir/payment';
-    },
-    startQrisPolling() {
-      this.stopQrisPolling();
-      this.qrisPollTimer = setInterval(async () => {
-        try {
-          const res = await axios.get(`/api/pos/orders/${this.qrisOrderId}/status`);
-          if (res.data.status === 'settlement') {
-            this.showQrisModal = false;
-            this.stopQrisPolling();
-            alert('Pembayaran berhasil!');
-            this.resetAfterOrder();
-            // Refresh halaman untuk memulai transaksi baru
-            window.location.reload();
-          }
-        } catch (error) {
-          console.error('Error checking payment status:', error);
-        }
-      }, 3000);
-    },
-    stopQrisPolling() {
-      if (this.qrisPollTimer) {
-        clearInterval(this.qrisPollTimer);
-        this.qrisPollTimer = null;
-      }
-    },
-    cancelQrisPayment() {
-      this.showQrisModal = false;
-      this.stopQrisPolling();
-    },
-    async checkPaymentStatus() {
-      try {
-        const res = await axios.get(`/api/pos/orders/${this.qrisOrderId}/status`);
-        if (res.data.status === 'settlement') {
-          this.showQrisModal = false;
-          this.stopQrisPolling();
-          alert('Pembayaran berhasil!');
-          this.resetAfterOrder();
-          // Refresh halaman untuk memulai transaksi baru
-          window.location.reload();
-        } else {
-          alert('Pembayaran belum selesai. Silakan coba lagi.');
-        }
-      } catch (error) {
-        console.error('Error checking payment status:', error);
-        alert('Gagal mengecek status pembayaran.');
-      }
-    },
-    resetAfterOrder() {
-      this.cart = [];
-      this.customerName = '';
-      this.customerPhone = '';
-      this.paymentMethod = 'cash';
-    }
-  },
-  beforeUnmount() {
-    this.stopQrisPolling();
-  }
+  ...PosAppISellerLogic
 }
 </script>
 
 <style scoped>
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
-  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -866,8 +553,111 @@ export default {
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
-  line-clamp: 2;
   -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Custom scrollbar */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Dark mode scrollbar */
+.dark .overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #4a5568;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #2d3748;
+}
+
+/* Ensure proper height calculation */
+.h-\[calc\(100vh-64px\)\] {
+  height: calc(100vh - 64px);
+}
+
+/* Modal backdrop blur effect */
+.backdrop-blur {
+  backdrop-filter: blur(4px);
+}
+
+/* Smooth transitions for all interactive elements */
+button, input, select {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Focus states */
+button:focus, input:focus, select:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Hover effects for cards */
+.hover\:scale-105:hover {
+  transform: scale(1.05);
+}
+
+/* Ensure proper spacing for mobile */
+@media (max-width: 768px) {
+  .grid-cols-2 {
+    gap: 0.75rem;
+  }
+}
+
+/* Custom animations */
+@keyframes slideIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Ensure proper z-index stacking */
+.z-50 {
+  z-index: 50;
+}
+
+/* Custom button styles */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Ensure proper text truncation */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Custom modal styles */
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Ensure proper overflow handling */
+.overflow-hidden {
   overflow: hidden;
 }
 </style>

@@ -265,7 +265,7 @@ export default {
   methods: {
     async loadUsers() {
       try {
-        const response = await fetch('/pos/users');
+        const response = await fetch('/api/admin/users');
         this.users = await response.json();
       } catch (error) {
         console.error('Error loading users:', error);
@@ -276,7 +276,7 @@ export default {
       this.loading = true;
       
       try {
-        const url = this.showCreateModal ? '/pos/users' : `/pos/users/${this.userForm.id}`;
+        const url = this.showCreateModal ? '/api/admin/users' : `/api/admin/users/${this.userForm.id}`;
         const method = this.showCreateModal ? 'POST' : 'PUT';
         
         const response = await fetch(url, {
@@ -311,7 +311,7 @@ export default {
     async deleteUser(userId) {
       if (confirm('Apakah Anda yakin ingin menghapus user ini?')) {
         try {
-          const response = await fetch(`/pos/users/${userId}`, {
+          const response = await fetch(`/api/admin/users/${userId}`, {
             method: 'DELETE',
             headers: {
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')

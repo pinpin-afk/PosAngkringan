@@ -295,7 +295,7 @@ export default {
     async loadMembers() {
       this.loading = true;
       try {
-        const response = await window.axios.get('/pos/members/api');
+        const response = await window.axios.get('/api/kasir/members');
         this.members = response.data || [];
       } catch (error) {
         console.error('Error loading members:', error);
@@ -308,10 +308,10 @@ export default {
       this.saving = true;
       try {
         if (this.showAddModal) {
-          await window.axios.post('/pos/members/api', this.form);
+          await window.axios.post('/api/kasir/members', this.form);
           alert('Member berhasil ditambahkan');
         } else {
-          await window.axios.put(`/pos/members/api/${this.form.id}`, this.form);
+          await window.axios.put(`/api/kasir/members/${this.form.id}`, this.form);
           alert('Member berhasil diupdate');
         }
         await this.loadMembers();
@@ -341,7 +341,7 @@ export default {
           this.deleting = false;
           return;
         }
-        await window.axios.delete(`/pos/members/api/${id}`);
+        await window.axios.delete(`/api/kasir/members/${id}`);
         alert('Member berhasil dihapus');
         await this.loadMembers();
         this.showDeleteModal = false;

@@ -317,7 +317,7 @@
 <script>
 import axios from 'axios';
 import PosMemberManagement from './PosMemberManagement.vue';
-import PaymentView from './PaymentView.vue';
+import PaymentView from './Kasir/Payment/PaymentView.vue';
 
 export default {
   name: 'PosAppTablet',

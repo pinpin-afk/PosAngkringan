@@ -556,6 +556,86 @@
         </div>
       </div>
     </div>
+
+    <!-- Draft Orders Modal -->
+    <div v-if="showDraftOrdersModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">Draft Orders</h3>
+            <div class="flex space-x-2">
+              <button
+                @click="loadDraftOrders"
+                class="px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+              >
+                Refresh
+              </button>
+              <button
+                @click="showDraftOrdersModal = false"
+                class="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+          <div v-if="draftOrders.length === 0" class="text-center py-12">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-gray-100">
+              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+            </div>
+            <p class="text-gray-500">Tidak ada draft orders</p>
+          </div>
+          
+          <div v-else class="space-y-4">
+            <div 
+              v-for="draft in draftOrders" 
+              :key="draft.id"
+              class="p-4 rounded-lg border bg-gray-50 border-gray-200"
+            >
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center space-x-2 mb-2">
+                    <span class="text-sm font-medium text-gray-900">Order #{{ draft.order_number }}</span>
+                    <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
+                      {{ draft.status }}
+                    </span>
+                  </div>
+                  
+                  <div class="text-sm text-gray-600 space-y-1">
+                    <p v-if="draft.customer_name"><strong>Customer:</strong> {{ draft.customer_name }}</p>
+                    <p v-if="draft.customer_phone"><strong>Phone:</strong> {{ draft.customer_phone }}</p>
+                    <p><strong>Items:</strong> {{ draft.order_items?.length || 0 }} produk</p>
+                    <p><strong>Total:</strong> Rp {{ formatPrice(draft.total) }}</p>
+                    <p><strong>Created:</strong> {{ formatDateTime(draft.created_at) }}</p>
+                  </div>
+                </div>
+                
+                <div class="flex space-x-2 ml-4">
+                  <button
+                    @click="editDraft(draft); showDraftOrdersModal = false"
+                    class="px-3 py-1 text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    @click="deleteDraft(draft.id)"
+                    class="px-3 py-1 text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 transition-colors"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -597,7 +677,10 @@ export default {
       memberLoading: false,
       members: [],
       showAddMemberModal: false,
-      selectedMember: null
+      selectedMember: null,
+      // Draft orders
+      showDraftOrdersModal: false,
+      draftOrders: []
     }
   },
   computed: {
@@ -693,7 +776,7 @@ export default {
     async loadProducts() {
       try {
         console.log('Loading products...');
-        const response = await axios.get('/pos/products');
+        const response = await axios.get('/api/pos/products');
         console.log('Products response:', response.data);
         this.products = response.data;
       } catch (error) {
@@ -705,7 +788,7 @@ export default {
     async loadCategories() {
       try {
         console.log('Loading categories...');
-        const response = await axios.get('/pos/categories');
+        const response = await axios.get('/api/pos/categories');
         console.log('Categories response:', response.data);
         this.categories = response.data;
       } catch (error) {
@@ -788,7 +871,7 @@ export default {
     async loadMembers() {
       this.memberLoading = true;
       try {
-        const response = await axios.get('/pos/members/api');
+        const response = await axios.get('/api/kasir/members');
         this.members = response.data || [];
       } catch (error) {
         console.error('Error loading members:', error);
@@ -896,6 +979,71 @@ export default {
       this.customerPhone = '';
       this.paymentMethod = 'cash';
       this.activeTab = 'products';
+    },
+    
+    // Draft Orders Methods
+    async loadDraftOrders() {
+      try {
+        const response = await axios.get('/api/kasir/orders/drafts');
+        this.draftOrders = response.data || [];
+      } catch (error) {
+        console.error('Error loading draft orders:', error);
+        this.draftOrders = [];
+      }
+    },
+    
+    async deleteDraft(draftId) {
+      if (!confirm('Yakin ingin menghapus draft order ini?')) return;
+      
+      try {
+        await axios.delete(`/api/kasir/orders/drafts/${draftId}`);
+        await this.loadDraftOrders(); // Refresh the list
+        alert('Draft order berhasil dihapus');
+      } catch (error) {
+        console.error('Error deleting draft order:', error);
+        alert('Gagal menghapus draft order');
+      }
+    },
+    
+    editDraft(draft) {
+      // Load draft data into current form
+      this.customerName = draft.customer_name || '';
+      this.customerPhone = draft.customer_phone || '';
+      this.tableNumber = draft.table_number || '';
+      
+      // Convert order items back to cart format
+      this.cart = draft.order_items?.map(item => ({
+        id: item.product_id,
+        name: item.product?.name || 'Unknown Product',
+        price: item.price,
+        quantity: item.quantity,
+        stock: item.product?.stock || 0
+      })) || [];
+      
+      // Save cart to localStorage
+      localStorage.setItem('pos_cart', JSON.stringify(this.cart));
+      localStorage.setItem('pos_customer_name', this.customerName);
+      localStorage.setItem('pos_customer_phone', this.customerPhone);
+      localStorage.setItem('pos_table_number', this.tableNumber);
+      
+      // Switch to cart tab
+      this.activeTab = 'cart';
+      
+      // Delete the draft since we're editing it
+      this.deleteDraft(draft.id);
+      
+      alert('Draft order dimuat ke form. Silakan lanjutkan dengan memilih metode pembayaran.');
+    },
+    
+    formatDateTime(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleString('id-ID', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     }
   },
   beforeUnmount() {

@@ -116,7 +116,7 @@
       </div>
       
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
+      <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
             <tr>
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -183,31 +183,31 @@
                   <span>Aksi</span>
                 </div>
               </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="order in paginatedOrders" :key="order.id" class="hover:bg-gray-50 transition-colors duration-150">
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-semibold text-gray-900">{{ order.order_number }}</div>
-              </td>
+            </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div>
+              <div>
                   <div class="text-sm font-semibold text-gray-900">{{ order.customer_name || 'Tidak ada nama' }}</div>
                   <div class="text-sm text-gray-500">{{ order.customer_phone || 'Tidak ada telepon' }}</div>
-                </div>
-              </td>
+              </div>
+            </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-semibold text-gray-900">Rp {{ formatPrice(order.total) }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
                 <span 
                   :class="getStatusClass(order.status)"
                   class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
                 >
                   <div :class="getStatusDotClass(order.status)" class="w-2 h-2 rounded-full mr-2"></div>
-                  {{ getStatusText(order.status) }}
-                </span>
-              </td>
+                {{ getStatusText(order.status) }}
+              </span>
+            </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span 
                   :class="getPaymentStatusClass(order.payment_status)"
@@ -241,8 +241,8 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-900">{{ formatDate(order.created_at) }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex space-x-2">
                   <button 
                     @click="viewOrder(order)"
@@ -295,10 +295,10 @@
                     <span>Detail Transfer</span>
                   </button>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
       </div>
 
       <!-- Pagination -->
@@ -383,8 +383,8 @@
               </svg>
             </button>
           </div>
-        </div>
-        
+          </div>
+          
         <div v-if="selectedOrder" class="px-4 sm:px-6 py-4">
           <div class="space-y-6">
             <!-- Order Info -->
@@ -428,33 +428,33 @@
             <div>
               <h4 class="text-sm font-semibold text-gray-700 mb-3">Item Pesanan</h4>
               <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                  <table class="min-w-full divide-y divide-gray-200">
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
                       <tr>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Produk</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Harga</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Qty</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Subtotal</th>
-                      </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
                       <tr v-for="item in selectedOrder.order_items" :key="item.id" class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {{ item.product ? item.product.name : 'Produk tidak ditemukan' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          Rp {{ formatPrice(item.price) }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {{ item.quantity }}
-                        </td>
+                        {{ item.product ? item.product.name : 'Produk tidak ditemukan' }}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        Rp {{ formatPrice(item.price) }}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ item.quantity }}
+                      </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                          Rp {{ formatPrice(item.subtotal) }}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                        Rp {{ formatPrice(item.subtotal) }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
                 </div>
               </div>
             </div>
@@ -466,11 +466,11 @@
                 <div class="flex justify-between text-sm">
                   <span class="text-gray-600">Subtotal:</span>
                   <span class="font-medium text-gray-900">Rp {{ formatPrice(selectedOrder.subtotal) }}</span>
-                </div>
+                  </div>
                 <div class="flex justify-between text-sm">
                   <span class="text-gray-600">Pajak (10%):</span>
                   <span class="font-medium text-gray-900">Rp {{ formatPrice(selectedOrder.tax) }}</span>
-                </div>
+                  </div>
                 <div class="border-t border-gray-300 pt-2">
                   <div class="flex justify-between text-base font-bold">
                     <span class="text-gray-900">Total:</span>
@@ -649,7 +649,7 @@ export default {
   methods: {
     async loadOrders() {
       try {
-        const response = await axios.get('/api/pos/orders');
+        const response = await axios.get('/api/admin/orders');
         this.orders = response.data;
       } catch (error) {
         console.error('Error loading orders:', error);
@@ -657,7 +657,7 @@ export default {
     },
     async viewOrder(order) {
       try {
-        const response = await axios.get(`/api/pos/orders/${order.id}`);
+        const response = await axios.get(`/api/admin/orders/${order.id}`);
         this.selectedOrder = response.data;
         this.showOrderModal = true;
       } catch (error) {
@@ -667,7 +667,7 @@ export default {
     async updateOrderStatus(order, status) {
       if (confirm(`Apakah Anda yakin ingin mengubah status pesanan menjadi "${this.getStatusText(status)}"?`)) {
         try {
-          await axios.put(`/api/pos/orders/${order.id}`, { status });
+          await axios.put(`/api/admin/orders/${order.id}`, { status });
           await this.loadOrders();
         } catch (error) {
           console.error('Error updating order status:', error);
@@ -747,7 +747,7 @@ export default {
           const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
           console.log('CSRF Token:', csrfToken);
           
-          const response = await axios.post(`/api/pos/orders/${order.id}/verify-transfer`, {
+          const response = await axios.post(`/api/admin/orders/${order.id}/verify-transfer`, {
             payment_status: 'verified',
             transfer_notes: 'Transfer terverifikasi oleh admin'
           }, {

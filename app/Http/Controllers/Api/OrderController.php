@@ -23,17 +23,18 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:20',
             'processed_by' => 'nullable|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'payment_method' => 'required|in:cash,card,qris,transfer',
+            'payment_method' => 'required|in:cash,card,qris,transfer,midtrans',
             'notes' => 'nullable|string',
             'selected_member' => 'nullable|array',
             'points_earned' => 'nullable|integer|min:0',
+            'idempotency_key' => 'nullable|string|max:191',
         ]);
         $orderNumber = 'ORD-' . date('Ymd') . '-' . Str::random(6);
 
@@ -57,7 +58,7 @@ class OrderController extends Controller
         $total = $subtotal + $tax;
 
         $isDraft = (bool) $request->boolean('draft');
-        $status = $isDraft ? 'pending' : ($request->payment_method === 'qris' ? 'pending' : 'completed');
+        $status = $isDraft ? 'pending' : (in_array($request->payment_method, ['qris','transfer','midtrans']) ? 'pending' : 'completed');
 
         $processedBy = $request->processed_by
             ?? session('kasir_user_name')
@@ -65,6 +66,26 @@ class OrderController extends Controller
             ?? (optional(\Auth::guard('kasir')->user())->name)
             ?? (optional(\Auth::guard('admin')->user())->name)
             ?? (optional(\Auth::user())->name);
+
+        // Idempotency: if idempotency_key provided, return existing matching pending order
+        if (!empty($validated['idempotency_key'])) {
+            $existing = Order::where('idempotency_key', $validated['idempotency_key'])->first();
+            if ($existing) {
+                return response()->json($existing->load('orderItems.product'), 200);
+            }
+        } else {
+            // Fallback dedupe: same processed_by + method + total, created within last 2 minutes and still pending
+            $existing = Order::where('processed_by', $processedBy)
+                ->where('payment_method', $request->payment_method)
+                ->where('total', $total)
+                ->where('status', 'pending')
+                ->where('created_at', '>=', now()->subMinutes(2))
+                ->latest()
+                ->first();
+            if ($existing) {
+                return response()->json($existing->load('orderItems.product'), 200);
+            }
+        }
 
         // Generate unique transfer code when payment_method is transfer
         $uniqueCode = null;
@@ -77,6 +98,7 @@ class OrderController extends Controller
 
         $order = Order::create([
             'order_number' => $orderNumber,
+            'idempotency_key' => $validated['idempotency_key'] ?? null,
             'customer_name' => $request->customer_name,
             'customer_phone' => $request->customer_phone,
             'processed_by' => $processedBy,
@@ -87,7 +109,7 @@ class OrderController extends Controller
             'unique_code' => $uniqueCode,
             'transfer_amount' => $transferAmount,
             'payment_method' => $request->payment_method,
-            'payment_status' => in_array($request->payment_method, ['qris', 'transfer']) ? 'pending' : 'paid',
+            'payment_status' => in_array($request->payment_method, ['qris', 'transfer', 'midtrans']) ? 'pending' : 'paid',
             'status' => $status,
             'notes' => $request->notes,
         ]);
@@ -97,15 +119,15 @@ class OrderController extends Controller
             OrderItem::create($item);
         }
 
-        // For non-QRIS, non-transfer and not draft, decrease stock immediately
-        if (!in_array($request->payment_method, ['qris', 'transfer']) && !$isDraft) {
+        // For methods other than qris/transfer/midtrans and not draft, decrease stock immediately
+        if (!in_array($request->payment_method, ['qris', 'transfer', 'midtrans']) && !$isDraft) {
             foreach ($request->items as $item) {
                 Product::where('id', $item['product_id'])->decrement('stock', $item['quantity']);
             }
         }
 
-        // Add points to member only when completed immediately (not draft, not QRIS, not transfer)
-        if (!$isDraft && !in_array($request->payment_method, ['qris', 'transfer'])) {
+        // Add points to member only when completed immediately (not draft, not qris/transfer/midtrans)
+        if (!$isDraft && !in_array($request->payment_method, ['qris', 'transfer', 'midtrans'])) {
             if ($request->selected_member && isset($request->selected_member['id'])) {
                 $member = Member::find($request->selected_member['id']);
                 if ($member && $request->points_earned > 0) {
@@ -349,6 +371,137 @@ class OrderController extends Controller
                 'by_method' => $byMethod,
             ],
             'orders' => $orders,
+        ]);
+    }
+
+    /**
+     * Get draft orders for current cashier
+     */
+    public function getDrafts(Request $request)
+    {
+        $cashier = auth('kasir')->user()->name;
+        
+        $drafts = Order::where('processed_by', $cashier)
+            ->where('status', 'draft')
+            ->with('orderItems.product')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json($drafts);
+    }
+
+    /**
+     * Delete a draft order
+     */
+    public function deleteDraft($id, Request $request)
+    {
+        $cashier = auth('kasir')->user()->name;
+        
+        $draft = Order::where('id', $id)
+            ->where('processed_by', $cashier)
+            ->where('status', 'draft')
+            ->first();
+
+        if (!$draft) {
+            return response()->json(['message' => 'Draft order not found'], 404);
+        }
+
+        $draft->delete();
+
+        return response()->json(['message' => 'Draft order deleted successfully']);
+    }
+
+    /**
+     * Update a draft order
+     */
+    public function updateDraft($id, Request $request)
+    {
+        $cashier = auth('kasir')->user()->name;
+        
+        $draft = Order::where('id', $id)
+            ->where('processed_by', $cashier)
+            ->where('status', 'draft')
+            ->first();
+
+        if (!$draft) {
+            return response()->json(['message' => 'Draft order not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'customer_name' => 'nullable|string|max:255',
+            'customer_phone' => 'nullable|string|max:20',
+            'table_number' => 'nullable|string|max:10',
+            'notes' => 'nullable|string|max:500',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+        ]);
+
+        // Update order details
+        $draft->update([
+            'customer_name' => $validated['customer_name'] ?? '',
+            'customer_phone' => $validated['customer_phone'] ?? '',
+            'table_number' => $validated['table_number'] ?? '',
+            'notes' => $validated['notes'] ?? '',
+        ]);
+
+        // Update order items
+        $draft->orderItems()->delete();
+        
+        $subtotal = 0;
+        foreach ($validated['items'] as $item) {
+            $product = Product::find($item['product_id']);
+            $itemTotal = $product->price * $item['quantity'];
+            $subtotal += $itemTotal;
+
+            $draft->orderItems()->create([
+                'product_id' => $item['product_id'],
+                'quantity' => $item['quantity'],
+                'price' => $product->price,
+                'total' => $itemTotal,
+            ]);
+        }
+
+        // Recalculate totals
+        $tax = $subtotal * 0.1; // 10% tax
+        $total = $subtotal + $tax;
+
+        $draft->update([
+            'subtotal' => $subtotal,
+            'tax' => $tax,
+            'total' => $total,
+        ]);
+
+        return response()->json([
+            'message' => 'Draft order updated successfully',
+            'order' => $draft->load('orderItems.product')
+        ]);
+    }
+
+    /**
+     * Cancel an order (set status to cancelled and payment_status to failed)
+     */
+    public function cancelOrder($id, Request $request)
+    {
+        $cashier = auth('kasir')->user()->name;
+        
+        $order = Order::where('id', $id)
+            ->where('processed_by', $cashier)
+            ->whereIn('status', ['pending', 'draft'])
+            ->first();
+
+        if (!$order) {
+            return response()->json(['message' => 'Order not found or cannot be cancelled'], 404);
+        }
+
+        $order->update([
+            'status' => 'cancelled',
+            'payment_status' => 'failed'
+        ]);
+
+        return response()->json([
+            'message' => 'Order cancelled successfully',
+            'order' => $order
         ]);
     }
 }

@@ -450,7 +450,7 @@ export default {
   methods: {
     async loadCategories() {
       try {
-        const response = await fetch('/pos/categories');
+        const response = await fetch('/api/admin/categories');
         this.categories = await response.json();
       } catch (error) {
         console.error('Error loading categories:', error);
@@ -461,7 +461,7 @@ export default {
       this.loading = true;
       
       try {
-        const url = this.showAddModal ? '/pos/categories' : `/pos/categories/${this.categoryForm.id}`;
+        const url = this.showAddModal ? '/api/admin/categories' : `/api/admin/categories/${this.categoryForm.id}`;
         const method = this.showAddModal ? 'POST' : 'PUT';
         
         const response = await fetch(url, {
@@ -496,7 +496,7 @@ export default {
     async deleteCategory(categoryId) {
       if (confirm('Apakah Anda yakin ingin menghapus kategori ini?')) {
         try {
-          const response = await fetch(`/pos/categories/${categoryId}`, {
+          const response = await fetch(`/api/admin/categories/${categoryId}`, {
             method: 'DELETE',
             headers: {
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')

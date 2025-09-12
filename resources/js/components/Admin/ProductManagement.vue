@@ -604,7 +604,7 @@ export default {
   methods: {
     async loadProducts() {
       try {
-        const response = await fetch('/pos/products');
+        const response = await fetch('/api/admin/products');
         this.products = await response.json();
         console.log('Loaded products:', this.products);
         
@@ -621,7 +621,7 @@ export default {
     
     async loadCategories() {
       try {
-        const response = await fetch('/pos/categories');
+        const response = await fetch('/api/admin/categories');
         this.categories = await response.json();
       } catch (error) {
         console.error('Error loading categories:', error);
@@ -632,7 +632,7 @@ export default {
       this.loading = true;
       
       try {
-        const url = this.showAddModal ? '/pos/products' : `/pos/products/${this.productForm.id}`;
+        const url = this.showAddModal ? '/api/admin/products' : `/api/admin/products/${this.productForm.id}`;
         const method = this.showAddModal ? 'POST' : 'PUT';
         
         console.log('Submitting product:', {
@@ -791,7 +791,7 @@ export default {
     async deleteProduct(productId) {
       if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
         try {
-          const response = await fetch(`/pos/products/${productId}`, {
+          const response = await fetch(`/api/admin/products/${productId}`, {
             method: 'DELETE',
             headers: {
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')

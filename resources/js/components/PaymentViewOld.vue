@@ -77,6 +77,63 @@
             </div>
           </div>
 
+          <!-- Draft Orders Management -->
+          <div class="transition-colors duration-300 rounded-lg border p-6" :class="isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Draft Orders</h3>
+              <button 
+                @click="loadDraftOrders"
+                class="px-3 py-1 text-sm rounded-lg transition-colors duration-300" :class="isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+              >
+                Refresh
+              </button>
+            </div>
+            
+            <div v-if="draftOrders.length === 0" class="text-center py-8">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" :class="isDarkMode ? 'bg-gray-700' : 'bg-gray-100'">
+                <svg class="w-8 h-8" :class="isDarkMode ? 'text-gray-400' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+              <p class="text-sm transition-colors duration-300" :class="isDarkMode ? 'text-gray-400' : 'text-gray-500'">Tidak ada draft order</p>
+            </div>
+
+            <div v-else class="space-y-3 max-h-64 overflow-y-auto">
+              <div
+                v-for="draft in draftOrders"
+                :key="draft.id"
+                class="p-4 rounded-lg border transition-colors duration-300" :class="isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'"
+              >
+                <div class="flex items-start justify-between mb-2">
+                  <div>
+                    <h4 class="font-medium text-sm transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">{{ draft.order_number }}</h4>
+                    <p class="text-xs transition-colors duration-300" :class="isDarkMode ? 'text-gray-400' : 'text-gray-500'">{{ formatDateTime(draft.created_at) }}</p>
+                  </div>
+                  <span class="text-sm font-semibold transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Rp {{ formatPrice(draft.total) }}</span>
+                </div>
+                
+                <div class="text-xs transition-colors duration-300 mb-3" :class="isDarkMode ? 'text-gray-400' : 'text-gray-500'">
+                  {{ draft.order_items?.length || 0 }} item(s) • {{ draft.customer_name || 'Tanpa nama' }}
+                </div>
+                
+                <div class="flex space-x-2">
+                  <button 
+                    @click="editDraft(draft)"
+                    class="px-3 py-1 text-xs rounded transition-colors duration-300" :class="isDarkMode ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600'"
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    @click="deleteDraft(draft.id)"
+                    class="px-3 py-1 text-xs rounded transition-colors duration-300" :class="isDarkMode ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-red-500 text-white hover:bg-red-600'"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Order Items -->
           <div class="transition-colors duration-300 rounded-lg border p-6" :class="isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'">
             <h3 class="text-lg font-semibold mb-4 transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Detail Pesanan</h3>
@@ -185,6 +242,35 @@
                       : (isDarkMode ? 'border-gray-600' : 'border-gray-300')
                   ]">
                     <div v-if="paymentMethod === 'transfer'" class="w-2 h-2 rounded-full bg-white"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Midtrans Payment -->
+              <div
+                @click="selectPaymentMethod('midtrans')"
+                class="p-4 rounded-lg border-2 cursor-pointer transition-all duration-200" :class="[
+                  paymentMethod === 'midtrans' 
+                    ? (isDarkMode ? 'border-blue-400 bg-blue-900/20' : 'border-blue-500 bg-blue-50')
+                    : (isDarkMode ? 'border-gray-600 hover:border-gray-500' : 'border-gray-300 hover:border-gray-400')
+                ]"
+              >
+                <div class="flex items-center space-x-3">
+                  <div class="w-12 h-12 rounded-lg flex items-center justify-center" :class="isDarkMode ? 'bg-gray-700' : 'bg-gray-100'">
+                    <svg class="w-6 h-6" :class="isDarkMode ? 'text-gray-300' : 'text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                    </svg>
+                  </div>
+                  <div class="flex-1">
+                    <h4 class="font-medium transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-gray-900'">Midtrans</h4>
+                    <p class="text-sm transition-colors duration-300" :class="isDarkMode ? 'text-gray-400' : 'text-gray-500'">Bank Transfer, E-wallet, Credit Card</p>
+                  </div>
+                  <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center" :class="[
+                    paymentMethod === 'midtrans' 
+                      ? (isDarkMode ? 'border-blue-400 bg-blue-400' : 'border-blue-500 bg-blue-500')
+                      : (isDarkMode ? 'border-gray-600' : 'border-gray-300')
+                  ]">
+                    <div v-if="paymentMethod === 'midtrans'" class="w-2 h-2 rounded-full bg-white"></div>
                   </div>
                 </div>
               </div>
@@ -381,6 +467,7 @@
                 successData?.paymentMethod === 'cash' ? 'Tunai' : 
                 successData?.paymentMethod === 'qris' ? 'QRIS' : 
                 successData?.paymentMethod === 'transfer' ? 'Transfer Bank' :
+                successData?.paymentMethod === 'midtrans' ? 'Midtrans' :
                 successData?.paymentMethod === 'debit' ? 'Debit' : 'Kredit' 
               }}
             </div>
@@ -537,7 +624,43 @@
         </div>
       </div>
     </div>
+
+    <!-- Midtrans Payment Modal -->
+    <div v-if="showMidtransModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg p-6 max-w-md w-full">
+        <div class="text-center">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Pembayaran Midtrans</h3>
+          <p class="text-sm text-gray-600 mb-6">Pilih metode pembayaran yang tersedia</p>
+          
+          <!-- Midtrans Snap Container -->
+          <div id="midtrans-snap-container" class="mb-6">
+            <div class="bg-gray-50 rounded-lg p-4">
+              <div class="flex items-center justify-center space-x-2">
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span class="text-sm text-gray-600">Memuat halaman pembayaran...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Info -->
+          <div class="space-y-2 mb-6">
+            <p class="text-sm font-medium">Order ID: {{ midtransOrderId }}</p>
+            <p class="text-sm font-medium">Total: Rp {{ formatPrice(total) }}</p>
+          </div>
+
+          <div class="flex space-x-3">
+            <button
+              @click="cancelMidtransPayment"
+              class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
 </template>
 
 <script>
@@ -574,7 +697,13 @@ export default {
       deeplinkUrl: null,
       // Transfer state
       showTransferModal: false,
-      transferOrderId: null
+      transferOrderId: null,
+      // Midtrans state
+      showMidtransModal: false,
+      midtransOrderId: null,
+      midtransSnapToken: null,
+      // Draft orders
+      draftOrders: []
     }
   },
   computed: {
@@ -612,28 +741,8 @@ export default {
     this.loadCartData();
     await this.loadKasirName();
     this.loadDarkModePreference();
-    // Create draft order for cash if not yet created
-    try {
-      if (!this.qrisOrderId && !localStorage.getItem('pos_draft_order_id')) {
-        const orderData = {
-          customer_name: this.customerName,
-          customer_phone: this.customerPhone,
-          processed_by: this.processedBy,
-          payment_method: 'cash',
-          selected_member: this.selectedMember,
-          points_earned: this.pointsEarned,
-          items: this.cart.map(item => ({ product_id: item.id, quantity: item.quantity })),
-          draft: true
-        };
-        if (orderData.items.length > 0) {
-          const res = await axios.post('/api/pos/orders', orderData);
-          const draftId = res?.data?.id;
-          if (draftId) {
-            localStorage.setItem('pos_draft_order_id', String(draftId));
-          }
-        }
-      }
-    } catch (_) {}
+    // Load draft orders
+    await this.loadDraftOrders();
   },
   methods: {
     loadCartData() {
@@ -687,14 +796,21 @@ export default {
         // If a cash draft exists, cancel it before proceeding with QRIS
         const draftId = localStorage.getItem('pos_draft_order_id');
         if (draftId) {
-          axios.put(`/api/pos/orders/${draftId}`, { status: 'cancelled' }).catch(() => {});
+          axios.put(`/api/kasir/orders/${draftId}`, { status: 'cancelled' }).catch(() => {});
           localStorage.removeItem('pos_draft_order_id');
         }
       } else if (method === 'transfer') {
         // If a cash draft exists, cancel it before proceeding with Transfer
         const draftId = localStorage.getItem('pos_draft_order_id');
         if (draftId) {
-          axios.put(`/api/pos/orders/${draftId}`, { status: 'cancelled' }).catch(() => {});
+          axios.put(`/api/kasir/orders/${draftId}`, { status: 'cancelled' }).catch(() => {});
+          localStorage.removeItem('pos_draft_order_id');
+        }
+      } else if (method === 'midtrans') {
+        // If a cash draft exists, cancel it before proceeding with Midtrans
+        const draftId = localStorage.getItem('pos_draft_order_id');
+        if (draftId) {
+          axios.put(`/api/kasir/orders/${draftId}`, { status: 'cancelled' }).catch(() => {});
           localStorage.removeItem('pos_draft_order_id');
         }
       }
@@ -748,7 +864,7 @@ export default {
         }
 
         if (this.paymentMethod === 'qris') {
-          const res = await axios.post('/api/pos/orders/charge', { ...orderData, payment_type: 'qris' });
+          const res = await axios.post('/api/kasir/orders/charge', { ...orderData, payment_type: 'qris' });
           const data = res.data || {};
           // Generate order ID if not provided by API
           const orderId = data.order_id || 
@@ -765,10 +881,11 @@ export default {
           this.startQrisPolling();
         } else if (this.paymentMethod === 'transfer') {
           // Create transfer order with pending status
-          const res = await axios.post('/api/pos/orders', { 
+          const res = await axios.post('/api/kasir/orders', { 
             ...orderData, 
             payment_method: 'transfer',
-            payment_type: 'transfer'
+            payment_type: 'transfer',
+            idempotency_key: `trf-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
           });
           const data = res.data || {};
           const orderId = data.order_id || 
@@ -779,18 +896,47 @@ export default {
           // Show transfer info modal
           this.showTransferModal = true;
           this.transferOrderId = orderId;
+        } else if (this.paymentMethod === 'midtrans') {
+          // Create order first
+          const orderRes = await axios.post('/api/kasir/orders', { 
+            ...orderData, 
+            payment_method: 'midtrans',
+            payment_type: 'midtrans',
+            idempotency_key: `mid-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+          });
+          const createdOrder = orderRes.data || {};
+          const orderId = createdOrder.order_id || 
+                         createdOrder.id || 
+                         createdOrder.order?.id ||
+                         `MID-${Date.now()}`;
+          
+          // Get Snap token from Midtrans
+          const snapRes = await axios.post('/api/kasir/midtrans/snap-token', {
+            order_id: orderId
+          });
+          
+          if (snapRes.data.success) {
+            this.midtransSnapToken = snapRes.data.snap_token;
+            this.midtransOrderId = orderId;
+            this.showMidtransModal = true;
+            this.$nextTick(() => {
+              this.initMidtransSnap();
+            });
+          } else {
+            throw new Error(snapRes.data.message || 'Failed to create Midtrans payment');
+          }
         } else {
           // If draft order exists for cash, complete it; otherwise create new
           const draftId = localStorage.getItem('pos_draft_order_id');
           let response;
           if (this.paymentMethod === 'cash' && draftId) {
-            response = await axios.put(`/api/pos/orders/${draftId}`, {
+            response = await axios.put(`/api/kasir/orders/${draftId}`, {
               status: 'completed',
               selected_member: this.selectedMember,
               points_earned: this.pointsEarned
             });
           } else {
-            response = await axios.post('/api/pos/orders', orderData);
+            response = await axios.post('/api/kasir/orders', orderData);
           }
           // Generate order ID if not provided by API
           const orderId = response.data?.order_id || 
@@ -832,13 +978,15 @@ export default {
         alert(apiMsg);
       } finally {
         this.loading = false;
+        // Refresh draft orders after any payment processing
+        await this.loadDraftOrders();
       }
     },
     startQrisPolling() {
       this.stopQrisPolling();
       this.qrisPollTimer = setInterval(async () => {
         try {
-          const res = await axios.get(`/api/pos/orders/${this.qrisOrderId}/status`);
+          const res = await axios.get(`/api/kasir/orders/${this.qrisOrderId}/status`);
           if (res.data.status === 'settlement') {
             this.showQrisModal = false;
             this.stopQrisPolling();
@@ -889,7 +1037,7 @@ export default {
       this.stopQrisPolling();
       try {
         if (this.qrisOrderId) {
-          await axios.put(`/api/pos/orders/${this.qrisOrderId}`, { status: 'cancelled' });
+          await axios.put(`/api/kasir/orders/${this.qrisOrderId}`, { status: 'cancelled' });
         }
       } catch (_) {}
     },
@@ -897,7 +1045,7 @@ export default {
       this.showTransferModal = false;
       try {
         if (this.transferOrderId) {
-          await axios.put(`/api/pos/orders/${this.transferOrderId}`, { status: 'cancelled' });
+          await axios.put(`/api/kasir/orders/${this.transferOrderId}`, { status: 'cancelled' });
         }
       } catch (_) {}
     },
@@ -969,9 +1117,9 @@ export default {
       try {
         const draftId = localStorage.getItem('pos_draft_order_id');
         if (this.qrisOrderId) {
-          await axios.put(`/api/pos/orders/${this.qrisOrderId}`, { status: 'cancelled' });
+          await axios.put(`/api/kasir/orders/${this.qrisOrderId}`, { status: 'cancelled' });
         } else if (draftId) {
-          await axios.put(`/api/pos/orders/${draftId}`, { status: 'cancelled' });
+          await axios.put(`/api/kasir/orders/${draftId}`, { status: 'cancelled' });
         }
       } catch (_) {}
       // Clear cart and customer data
@@ -1124,7 +1272,7 @@ export default {
             <div class="cash-details">
               <div class="cash-line">
                 <span>Metode:</span>
-                <span>${paymentMethod === 'qris' ? 'QRIS' : paymentMethod === 'transfer' ? 'Transfer Bank' : paymentMethod === 'debit' ? 'Debit' : 'Kredit'}</span>
+                <span>${paymentMethod === 'qris' ? 'QRIS' : paymentMethod === 'transfer' ? 'Transfer Bank' : paymentMethod === 'midtrans' ? 'Midtrans' : paymentMethod === 'debit' ? 'Debit' : 'Kredit'}</span>
               </div>
             </div>
           `}
@@ -1143,6 +1291,161 @@ export default {
       this.showSuccessModal = false;
       this.successData = null;
       this.clearCartAndRedirect();
+    },
+    async initMidtransSnap() {
+      try {
+        await this.loadMidtransSdk();
+      } catch (e) {
+        console.error('Failed to load Midtrans SDK', e);
+        alert('Payment gateway tidak tersedia. Silakan coba lagi.');
+        return;
+      }
+
+      if (typeof snap !== 'undefined' && this.midtransSnapToken) {
+        snap.pay(this.midtransSnapToken, {
+          onSuccess: (result) => {
+            console.log('Midtrans payment success:', result);
+            this.handleMidtransSuccess(result);
+          },
+          onPending: (result) => {
+            console.log('Midtrans payment pending:', result);
+            this.handleMidtransPending(result);
+          },
+          onError: (result) => {
+            console.log('Midtrans payment error:', result);
+            this.handleMidtransError(result);
+          },
+          onClose: () => {
+            console.log('Midtrans payment closed');
+            this.cancelMidtransPayment();
+          }
+        });
+      } else {
+        console.error('Midtrans Snap SDK not loaded or token missing');
+        alert('Payment gateway tidak tersedia. Silakan coba lagi.');
+      }
+    },
+    loadMidtransSdk() {
+      // If already loaded
+      if (typeof snap !== 'undefined') return Promise.resolve();
+
+      // Avoid duplicate injections
+      if (document.getElementById('midtrans-snap-sdk')) {
+        return new Promise((resolve, reject) => {
+          const check = () => {
+            if (typeof snap !== 'undefined') resolve();
+            else setTimeout(check, 100);
+          };
+          check();
+        });
+      }
+
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.id = 'midtrans-snap-sdk';
+        script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+        // TODO: ideally read from env and expose to frontend; using current sandbox key
+        script.setAttribute('data-client-key', 'Mid-client-Ojy9d3wWhlCX9XiU');
+        script.setAttribute('data-environment', 'sandbox');
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Failed to load Midtrans SDK'));
+        document.body.appendChild(script);
+      });
+    },
+    handleMidtransSuccess(result) {
+      this.showMidtransModal = false;
+      this.showSuccessModal = true;
+      this.successData = {
+        orderId: this.midtransOrderId,
+        paymentMethod: 'midtrans',
+        total: this.finalTotal,
+        transactionId: result.transaction_id
+      };
+    },
+    handleMidtransPending(result) {
+      this.showMidtransModal = false;
+      alert('Pembayaran sedang diproses. Silakan tunggu konfirmasi.');
+    },
+    handleMidtransError(result) {
+      this.showMidtransModal = false;
+      alert('Pembayaran gagal. Silakan coba lagi.');
+    },
+    async cancelMidtransPayment() {
+      this.showMidtransModal = false;
+      
+      if (this.midtransOrderId) {
+        try {
+          // Cancel the order on the backend
+          await axios.post(`/api/kasir/orders/${this.midtransOrderId}/cancel`);
+          console.log('Order cancelled successfully');
+        } catch (error) {
+          console.error('Error cancelling order:', error);
+        }
+      }
+      
+      this.midtransOrderId = null;
+      this.midtransSnapToken = null;
+      
+      // Refresh draft orders to show updated status
+      await this.loadDraftOrders();
+    },
+    
+    // Draft order management methods
+    async loadDraftOrders() {
+      try {
+        const response = await axios.get('/api/kasir/orders/drafts');
+        this.draftOrders = response.data;
+      } catch (error) {
+        console.error('Error loading draft orders:', error);
+        this.draftOrders = [];
+      }
+    },
+    
+    async deleteDraft(draftId) {
+      if (!confirm('Yakin ingin menghapus draft order ini?')) return;
+      
+      try {
+        await axios.delete(`/api/kasir/orders/drafts/${draftId}`);
+        await this.loadDraftOrders(); // Refresh the list
+        alert('Draft order berhasil dihapus');
+      } catch (error) {
+        console.error('Error deleting draft order:', error);
+        alert('Gagal menghapus draft order');
+      }
+    },
+    
+    editDraft(draft) {
+      // Load draft data into current form
+      this.customerName = draft.customer_name || '';
+      this.customerPhone = draft.customer_phone || '';
+      this.tableNumber = draft.table_number || '';
+      
+      // Convert order items back to cart format
+      this.cart = draft.order_items?.map(item => ({
+        id: item.product_id,
+        name: item.product?.name || 'Unknown Product',
+        price: item.price,
+        quantity: item.quantity
+      })) || [];
+      
+      // Save cart to localStorage
+      localStorage.setItem('pos_cart', JSON.stringify(this.cart));
+      
+      // Delete the draft since we're editing it
+      this.deleteDraft(draft.id);
+      
+      alert('Draft order dimuat ke form. Silakan lanjutkan dengan memilih metode pembayaran.');
+    },
+    
+    formatDateTime(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleString('id-ID', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     }
   },
   beforeUnmount() {

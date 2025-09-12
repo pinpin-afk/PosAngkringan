@@ -315,7 +315,7 @@ export default {
           window.axios.defaults.headers.common['X-CSRF-TOKEN'] = window.csrfToken;
         }
         
-        const response = await window.axios.get('/pos/members/api');
+        const response = await window.axios.get('/api/admin/members');
         this.members = response.data || [];
       } catch (error) {
         console.error('Error loading members:', error);
@@ -338,10 +338,10 @@ export default {
         }
         
         if (this.showAddModal) {
-          await window.axios.post('/pos/members/api', this.form);
+          await window.axios.post('/api/admin/members', this.form);
           alert('Member berhasil ditambahkan');
         } else {
-          await window.axios.put(`/pos/members/api/${this.form.id}`, this.form);
+          await window.axios.put(`/api/admin/members/${this.form.id}`, this.form);
           alert('Member berhasil diupdate');
         }
         await this.loadMembers();
@@ -370,7 +370,7 @@ export default {
           window.axios.defaults.headers.common['X-CSRF-TOKEN'] = window.csrfToken;
         }
         
-        await window.axios.put(`/pos/members/api/${member.id}`, {
+        await window.axios.put(`/api/admin/members/${member.id}`, {
           ...member,
           is_active: !member.is_active
         });
@@ -398,7 +398,7 @@ export default {
           window.axios.defaults.headers.common['X-CSRF-TOKEN'] = window.csrfToken;
         }
         
-        await window.axios.delete(`/pos/members/api/${this.memberToDelete.id}`);
+        await window.axios.delete(`/api/admin/members/${this.memberToDelete.id}`);
         alert('Member berhasil dihapus');
         await this.loadMembers();
         this.showDeleteModal = false;

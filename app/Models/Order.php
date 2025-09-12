@@ -11,6 +11,7 @@ class Order extends Model
 
     protected $fillable = [
         'order_number',
+        'idempotency_key',
         'customer_name',
         'customer_phone',
         'processed_by',
