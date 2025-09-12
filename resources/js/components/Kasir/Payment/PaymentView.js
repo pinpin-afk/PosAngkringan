@@ -6,6 +6,7 @@ import PaymentService from '../../../services/paymentOrder/PaymentService.js';
 import DraftOrderService from '../../../services/paymentOrder/DraftOrderService.js';
 
 export default {
+  name: 'PaymentView',
   data() {
     return {
       cart: [],
@@ -90,6 +91,36 @@ export default {
       const savedCustomerPhone = localStorage.getItem('pos_customer_phone');
       if (savedCustomerPhone) {
         this.customerPhone = savedCustomerPhone;
+      }
+
+      // Load optional data saved from POS screen
+      const savedTableNumber = localStorage.getItem('pos_table_number');
+      if (savedTableNumber) {
+        this.tableNumber = savedTableNumber;
+      }
+
+      const savedMember = localStorage.getItem('pos_selected_member');
+      if (savedMember) {
+        try { this.selectedMember = JSON.parse(savedMember); } catch (_) {}
+      }
+
+      const savedFinalTotal = localStorage.getItem('pos_final_total');
+      if (savedFinalTotal) {
+        const parsed = parseFloat(savedFinalTotal);
+        if (!Number.isNaN(parsed)) {
+          this.finalTotal = parsed;
+        }
+      }
+
+      const savedPoints = localStorage.getItem('pos_points_earned');
+      if (savedPoints) {
+        const parsed = parseInt(savedPoints, 10);
+        if (!Number.isNaN(parsed)) {
+          // Only assign if we actually use data-based points; computed points will take precedence otherwise
+          if (!this.$options.computed || !this.$options.computed.pointsEarned) {
+            this.pointsEarned = parsed;
+          }
+        }
       }
     },
 
@@ -216,12 +247,17 @@ export default {
           this.successData = {
             orderId: orderId,
             paymentMethod: this.paymentMethod,
-            total: this.finalTotal,
+            total: this.displayTotal,
             change: this.changeAmount
           };
           
           // Clear cart and customer data
           this.clearCart();
+
+          // Auto return to main POS after a short delay
+          setTimeout(() => {
+            window.location.href = '/kasir/pos';
+          }, 1200);
         }
       } catch (error) {
         console.error('Payment processing error:', error);
@@ -315,9 +351,17 @@ export default {
       this.successData = {
         orderId: this.midtransOrderId,
         paymentMethod: 'midtrans',
-        total: this.finalTotal,
+        total: this.displayTotal,
         transactionId: result.transaction_id
       };
+
+      // Clear cart and related local storage before redirect
+      this.clearCart();
+
+      // Auto return to main POS after a short delay
+      setTimeout(() => {
+        window.location.href = '/kasir/pos';
+      }, 1200);
     },
 
     handleMidtransPending(result) {
@@ -446,6 +490,10 @@ export default {
       localStorage.removeItem('pos_cart');
       localStorage.removeItem('pos_customer_name');
       localStorage.removeItem('pos_customer_phone');
+      localStorage.removeItem('pos_table_number');
+      localStorage.removeItem('pos_selected_member');
+      localStorage.removeItem('pos_points_earned');
+      localStorage.removeItem('pos_final_total');
       localStorage.removeItem('pos_draft_order_id');
     },
 

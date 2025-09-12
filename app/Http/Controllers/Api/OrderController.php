@@ -58,7 +58,8 @@ class OrderController extends Controller
         $total = $subtotal + $tax;
 
         $isDraft = (bool) $request->boolean('draft');
-        $status = $isDraft ? 'pending' : (in_array($request->payment_method, ['qris','transfer','midtrans']) ? 'pending' : 'completed');
+        // Draft orders should be marked as 'draft' to be listed and editable via draft endpoints
+        $status = $isDraft ? 'draft' : (in_array($request->payment_method, ['qris','transfer','midtrans']) ? 'pending' : 'completed');
 
         $processedBy = $request->processed_by
             ?? session('kasir_user_name')
